@@ -44,7 +44,7 @@ def main():
     print("\n[ Clean Evaluation ]")
     test(model, features, adj, labels, idx_test)
 
-    # Optional adversarial attack
+    # adversarial attack
     # if apply_attack:
     #     target_node = idx_test[0].item()
     #     n_perturbations = 3
