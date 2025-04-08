@@ -4,9 +4,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 import wandb
 
-from model import GCN
-from data import load_data
-from config import config
+from src.model import GCN
+from src.data import load_data
+from src.config import config
 from utils import train, test
 #from attacks import apply_nettack
 
@@ -30,7 +30,9 @@ def main():
         nclass=labels.max().item() + 1,
         dropout=run_config["dropout"],
     )
-    optimizer = optim.Adam(model.parameters(), lr=run_config["lr"], weight_decay=run_config["weight_decay"])
+    optimizer = optim.Adam(model.parameters(),
+                           lr=run_config["lr"],
+                           weight_decay=run_config["weight_decay"])
 
     use_cuda = run_config["use_cuda"] and torch.cuda.is_available()
     if use_cuda:
@@ -38,17 +40,28 @@ def main():
         features, adj, labels = features.cuda(), adj.cuda(), labels.cuda()
         idx_train, idx_test = idx_train.cuda(), idx_test.cuda()
 
-    # Train
+    # Train for several epochs, and test every epoch
     for epoch in range(run_config["epochs"]):
+        # 1) One epoch of training
         loss, acc = train(model, optimizer, features, adj, labels, idx_train, epoch, use_cuda)
-        wandb.log({"epoch": epoch, "train_loss": loss, "train_accuracy": acc})
+
+        # 2) Evaluate on test set at end of this epoch
+        loss_test, acc_test = test(model, features, adj, labels, idx_test, epoch)
+        # The 'test' function already logs test metrics to WandB
 
     print("Training completed.")
 
-    # Test on clean graph
-    print("\n[ Clean Evaluation ]")
-    loss_test, acc_test = test(model, features, adj, labels, idx_test)
-    wandb.log({"test_loss_clean": loss_test, "test_accuracy_clean": acc_test})
+    # Optionally do a final test again if you want to confirm final metrics
+    print("\n[Evaluation ]")
+    final_loss_test, final_acc_test = test(model, features, adj, labels, idx_test)
+    wandb.log({"final_test_loss": final_loss_test, "final_test_accuracy": final_acc_test})
+
+if __name__ == "__main__":
+    main()
+
+
+
+
 
     # Optional: Apply Attack
     # if run_config.get("apply_attack", False):
@@ -65,6 +78,3 @@ def main():
 
     #     print(f"After attack: Target node {target_node} - True: {true}, Pred: {pred}")
     #     wandb.log({"attack_target_node": target_node, "true_label": true, "predicted_label": pred})
-
-if __name__ == "__main__":
-    main()
