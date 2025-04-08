@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from src.layers import GraphConvolution
+from layers import GraphConvolution
  
 class GCN(nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout):
@@ -13,3 +13,5 @@ class GCN(nn.Module):
         x = F.relu(self.gc1(x, adj))
         x = F.dropout(x, self.dropout, training=self.training)
         return F.log_softmax(self.gc2(x, adj), dim=1)
+
+

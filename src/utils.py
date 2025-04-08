@@ -1,7 +1,7 @@
 # utils.py
 import wandb
 import torch.nn.functional as F
-from src.metrics import compute_f1_score, compute_precision, compute_recall, accuracy
+from metrics import compute_f1_score, compute_precision, compute_recall, accuracy
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -66,7 +66,7 @@ def test(model, features, adj, labels, idx_test, epoch=None):
     wandb.log({"confusion_matrix": wandb.Image(plt)})
     plt.close()
 
-    # Prepare a dict of metrics to log
+
     log_dict = {
         "test_loss": loss_test.item(),
         "test_accuracy": acc_test.item(),
@@ -74,11 +74,11 @@ def test(model, features, adj, labels, idx_test, epoch=None):
         "test_precision": prec,
         "test_recall": rec
     }
-    # If epoch is provided, include it in the logs
+
     if epoch is not None:
         log_dict["epoch"] = epoch
 
-    # Log to Weights & Biases
+    # Log to wandb
     wandb.log(log_dict)
     
     print(f"Test Results - Loss: {loss_test:.4f} | Accuracy: {acc_test:.4f} | "

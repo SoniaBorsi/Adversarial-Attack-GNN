@@ -1,4 +1,3 @@
-import torch
 from sklearn.metrics import f1_score, precision_score, recall_score
 from sklearn.metrics import f1_score as sk_f1_score
 

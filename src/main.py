@@ -4,14 +4,14 @@ import torch.nn.functional as F
 import torch.optim as optim
 import wandb
 
-from src.model import GCN
-from src.data import load_data
-from src.config import config
+from model import GCN
+from data import load_data
+from config import config
 from utils import train, test
 #from attacks import apply_nettack
 
 def main():
-    # Initialize Weights & Biases
+    # Initialize wandb
     wandb.init(
         project="gnn",
         config=config,
@@ -47,11 +47,10 @@ def main():
 
         # 2) Evaluate on test set at end of this epoch
         loss_test, acc_test = test(model, features, adj, labels, idx_test, epoch)
-        # The 'test' function already logs test metrics to WandB
 
     print("Training completed.")
 
-    # Optionally do a final test again if you want to confirm final metrics
+    # final test 
     print("\n[Evaluation ]")
     final_loss_test, final_acc_test = test(model, features, adj, labels, idx_test)
     wandb.log({"final_test_loss": final_loss_test, "final_test_accuracy": final_acc_test})
