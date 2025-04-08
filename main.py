@@ -2,6 +2,7 @@ import time
 import torch
 import torch.nn.functional as F
 import torch.optim as optim
+import wandb
 
 from model import GCN
 from data import load_data
@@ -9,45 +10,50 @@ from config import config
 from utils import train, test
 #from attacks import apply_nettack
 
-
-
 def main():
-    # Config
-    epochs = config["epochs"]
-    lr = config["lr"]
-    weight_decay = config["weight_decay"]
-    hidden = config["hidden"]
-    dropout = config["dropout"]
-    use_cuda = config["use_cuda"] and torch.cuda.is_available()
-    apply_attack = config.get("apply_attack", False)
-    dataset_path = config["datasets"][config["active_dataset"]]
+    # Initialize Weights & Biases
+    wandb.init(
+        project="gnn",
+        config=config,
+        name=f"{config['active_dataset']}_run_{int(time.time())}",
+    )
+    run_config = wandb.config
 
     # Load data
+    dataset_path = run_config["datasets"][run_config["active_dataset"]]
     adj, features, labels, idx_train, idx_test = load_data(dataset_path)
 
-    # Model
-    model = GCN(nfeat=features.shape[1], nhid=hidden, nclass=labels.max().item() + 1, dropout=dropout)
-    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    # Setup model
+    model = GCN(
+        nfeat=features.shape[1],
+        nhid=run_config["hidden"],
+        nclass=labels.max().item() + 1,
+        dropout=run_config["dropout"],
+    )
+    optimizer = optim.Adam(model.parameters(), lr=run_config["lr"], weight_decay=run_config["weight_decay"])
 
+    use_cuda = run_config["use_cuda"] and torch.cuda.is_available()
     if use_cuda:
         model.cuda()
         features, adj, labels = features.cuda(), adj.cuda(), labels.cuda()
         idx_train, idx_test = idx_train.cuda(), idx_test.cuda()
 
-    # Training loop
-    t_total = time.time()
-    for epoch in range(epochs):
-        train(model, optimizer, features, adj, labels, idx_train, epoch, use_cuda)
-    print("Training finished in {:.4f}s".format(time.time() - t_total))
+    # Train
+    for epoch in range(run_config["epochs"]):
+        loss, acc = train(model, optimizer, features, adj, labels, idx_train, epoch, use_cuda)
+        wandb.log({"epoch": epoch, "train_loss": loss, "train_accuracy": acc})
+
+    print("Training completed.")
 
     # Test on clean graph
     print("\n[ Clean Evaluation ]")
-    test(model, features, adj, labels, idx_test)
+    loss_test, acc_test = test(model, features, adj, labels, idx_test)
+    wandb.log({"test_loss_clean": loss_test, "test_accuracy_clean": acc_test})
 
-    # adversarial attack
-    # if apply_attack:
+    # Optional: Apply Attack
+    # if run_config.get("apply_attack", False):
     #     target_node = idx_test[0].item()
-    #     n_perturbations = 3
+    #     n_perturbations = run_config.get("n_perturbations", 3)
 
     #     print(f"\n[ Nettack ] Targeting node {target_node} with {n_perturbations} perturbations...")
     #     perturbed_adj, perturbed_features = apply_nettack(model, adj, features, labels, target_node, n_perturbations)
@@ -56,9 +62,9 @@ def main():
     #     output = model(perturbed_features, perturbed_adj)
     #     pred = output[target_node].argmax().item()
     #     true = labels[target_node].item()
-    #     print(f"After attack: Target node {target_node} - True label: {true}, Predicted: {pred}")
-    # else:
-    #     print("\n[ Nettack Skipped ] Attack not applied based on config setting.")
+
+    #     print(f"After attack: Target node {target_node} - True: {true}, Pred: {pred}")
+    #     wandb.log({"attack_target_node": target_node, "true_label": true, "predicted_label": pred})
 
 if __name__ == "__main__":
     main()

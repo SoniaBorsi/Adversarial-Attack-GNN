@@ -3,13 +3,13 @@ config = {
         "cora": "data/cora/",
         "citeseer": "data/citeseer/"
     },
-    "active_dataset": "citeseer",
+    "active_dataset": "cora",
     "epochs": 200,
     "lr": 0.01,
     "weight_decay": 5e-4,
     "hidden": 16,
     "dropout": 0.5,
     "use_cuda": True,
-
-    "apply_attack": False
+    "apply_attack": False,
+    "n_perturbations": 3,
 }

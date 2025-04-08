@@ -20,6 +20,7 @@ def train(model, optimizer, features, adj, labels, idx_train, epoch, use_cuda):
     train_accuracies.append(acc_train.item())
 
     print(f"Epoch {epoch:03d} | Loss: {loss_train:.4f} | Acc: {acc_train:.4f}")
+    return loss_train.item(), acc_train
 
 def test(model, features, adj, labels, idx_test):
     model.eval()
@@ -28,4 +29,5 @@ def test(model, features, adj, labels, idx_test):
     acc_test = accuracy(output[idx_test], labels[idx_test])
     print(f"Test set results: Loss = {loss_test:.4f} | Accuracy = {acc_test:.4f}")
     return loss_test.item(), acc_test.item()
+    
 

@@ -55,8 +55,6 @@ def load_data(path):
     idx_test = perm[split:]
     
 
-
-
     features = torch.FloatTensor(np.array(features.todense()))
     labels = torch.LongTensor(np.where(labels)[1])
     adj = sparse_mx_to_torch_sparse_tensor(adj)
