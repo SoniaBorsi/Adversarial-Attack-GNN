@@ -40,6 +40,9 @@ def main():
         features, adj, labels = features.cuda(), adj.cuda(), labels.cuda()
         idx_train, idx_test = idx_train.cuda(), idx_test.cuda()
 
+    best_accuracy = float(0.0)
+    epochs_without_improvement = 0
+    
     # Train for several epochs, and test every epoch
     for epoch in range(run_config["epochs"]):
         # 1) One epoch of training
@@ -47,13 +50,21 @@ def main():
 
         # 2) Evaluate on test set at end of this epoch
         loss_test, acc_test = test(model, features, adj, labels, idx_test, epoch)
-
+        
+        if acc_test > best_accuracy:
+            best_accuracy = acc_test
+        else:
+            epochs_without_improvement +=1
+        
+        if epochs_without_improvement >= config['early_stopping_patience']:
+            print(f"Early stopping triggered at epoch {epoch}")
+            break
     print("Training completed.")
 
-    # final test 
-    print("\n[Evaluation ]")
-    final_loss_test, final_acc_test = test(model, features, adj, labels, idx_test)
-    wandb.log({"final_test_loss": final_loss_test, "final_test_accuracy": final_acc_test})
+    # # final test 
+    # print("\n[Evaluation]")
+    # final_loss_test, final_acc_test = test(model, features, adj, labels, idx_test)
+    # wandb.log({"final_test_loss": final_loss_test, "final_test_accuracy": final_acc_test})
 
 if __name__ == "__main__":
     main()

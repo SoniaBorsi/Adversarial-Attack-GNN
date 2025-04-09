@@ -39,6 +39,7 @@ def load_data(path):
     features = normalize(features)
     adj = normalize(adj + sp.eye(adj.shape[0]))
 
+    # for semi supervised 
     # idx_train = torch.LongTensor(range(140))
     # idx_val = torch.LongTensor(range(200, 500))
     # idx_test = torch.LongTensor(range(500, 1500))
@@ -73,3 +74,9 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx):
     indices = torch.from_numpy(np.vstack((sparse_mx.row, sparse_mx.col)).astype(np.int64))
     values = torch.from_numpy(sparse_mx.data)
     return torch.sparse.FloatTensor(indices, values, torch.Size(sparse_mx.shape))
+
+
+
+
+
+
