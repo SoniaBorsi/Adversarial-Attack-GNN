@@ -2,9 +2,10 @@ config = {
     "datasets": {
         "cora": "data/cora/",
         "citeseer": "data/citeseer/",
-        "pubmed": "data/pubmed/"
+        "pubmed": "data/pubmed/",
+        "polblogs": "data/polblogs/"
     },
-    "active_dataset": "cora",
+    "active_dataset": "citeseer",
     "epochs": 300,
     "lr": 0.01,
     "weight_decay": 5e-4,

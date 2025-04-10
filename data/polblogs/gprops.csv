@@ -1,0 +1,7 @@
+# prop_name, value
+name,polblogs
+description,A directed network of hyperlinks among a large set of U.S. political weblogs from before the 2004 election. Includes blog political affiliation as metadata.
+citation,"['L. A. Adamic and N. Glance, \"The political blogosphere and the 2004 U.S. election: divided they blog.\" Proc. 3rd Internat. Workshop on Link Discovery (LinkKDD), 36-43 (2005)., http://dl.acm.org/citation.cfm?id=1134277']"
+url,http://www-personal.umich.edu/~mejn/netdata
+tags,"['Informational', 'Web graph', 'Unweighted', 'Metadata']"
+directed,1.0

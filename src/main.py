@@ -8,7 +8,7 @@ from model import GCN
 from data import load_data
 from config import config
 from utils import train, test
-#from attacks import apply_nettack
+from attacks.nettack_prova import apply_nettack
 
 def main():
     # Initialize wandb
@@ -60,31 +60,26 @@ def main():
             print(f"Early stopping triggered at epoch {epoch}")
             break
     print("Training completed.")
+    
+    # Apply Attack
+    if run_config.get("apply_attack", False):
+        target_node = idx_test[0].item()
+        n_perturbations = run_config.get("n_perturbations", 3)
 
-    # # final test 
-    # print("\n[Evaluation]")
-    # final_loss_test, final_acc_test = test(model, features, adj, labels, idx_test)
-    # wandb.log({"final_test_loss": final_loss_test, "final_test_accuracy": final_acc_test})
+        print(f"\n[ Nettack ] Targeting node {target_node} with {n_perturbations} perturbations...")
+        perturbed_adj, perturbed_features = apply_nettack(model, adj, features, labels, target_node, n_perturbations)
+
+        model.eval()
+        output = model(perturbed_features, perturbed_adj)
+        pred = output[target_node].argmax().item()
+        true = labels[target_node].item()
+
+        print(f"After attack: Target node {target_node} - True: {true}, Pred: {pred}")
+        wandb.log({"attack_target_node": target_node, "true_label": true, "predicted_label": pred})
+
 
 if __name__ == "__main__":
     main()
 
 
 
-
-
-    # Optional: Apply Attack
-    # if run_config.get("apply_attack", False):
-    #     target_node = idx_test[0].item()
-    #     n_perturbations = run_config.get("n_perturbations", 3)
-
-    #     print(f"\n[ Nettack ] Targeting node {target_node} with {n_perturbations} perturbations...")
-    #     perturbed_adj, perturbed_features = apply_nettack(model, adj, features, labels, target_node, n_perturbations)
-
-    #     model.eval()
-    #     output = model(perturbed_features, perturbed_adj)
-    #     pred = output[target_node].argmax().item()
-    #     true = labels[target_node].item()
-
-    #     print(f"After attack: Target node {target_node} - True: {true}, Pred: {pred}")
-    #     wandb.log({"attack_target_node": target_node, "true_label": true, "predicted_label": pred})
