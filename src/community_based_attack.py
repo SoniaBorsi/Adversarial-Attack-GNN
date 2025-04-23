@@ -38,6 +38,7 @@ def load_graph_and_features(datadir):
     return G, X, folder
 
 
+
 def detect_communities(G):
     return list(community.louvain_communities(G, seed=42))
 
