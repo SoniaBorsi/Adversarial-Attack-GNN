@@ -8,7 +8,6 @@ from model import GCN
 from data import load_data
 from config import config
 from utils import train, test
-from attacks.nettack_prova import apply_nettack
 
 def main():
     # Initialize wandb
@@ -19,20 +18,32 @@ def main():
     )
     run_config = wandb.config
 
-    # Load data
+    # Select dataset folder
     dataset_path = run_config["datasets"][run_config["active_dataset"]]
+
+    # Check if the user wants to load the perturbed dataset
+    if run_config["use_perturbed"]:
+        perturbed_path = dataset_path.rstrip("/") + "/perturbed/"
+        print("→ Loading perturbed dataset from:", perturbed_path)
+        dataset_path = perturbed_path
+    else:
+        print("→ Loading original dataset from:", dataset_path)
+
+    # Load dataset
     adj, features, labels, idx_train, idx_test = load_data(dataset_path)
 
-    # Setup model
+    # Set up the GCN model
     model = GCN(
         nfeat=features.shape[1],
         nhid=run_config["hidden"],
         nclass=labels.max().item() + 1,
         dropout=run_config["dropout"],
     )
-    optimizer = optim.Adam(model.parameters(),
-                           lr=run_config["lr"],
-                           weight_decay=run_config["weight_decay"])
+    optimizer = optim.Adam(
+        model.parameters(),
+        lr=run_config["lr"],
+        weight_decay=run_config["weight_decay"]
+    )
 
     use_cuda = run_config["use_cuda"] and torch.cuda.is_available()
     if use_cuda:
@@ -40,46 +51,25 @@ def main():
         features, adj, labels = features.cuda(), adj.cuda(), labels.cuda()
         idx_train, idx_test = idx_train.cuda(), idx_test.cuda()
 
-    best_accuracy = float(0.0)
+    best_accuracy = 0.0
     epochs_without_improvement = 0
-    
-    # Train for several epochs, and test every epoch
-    for epoch in range(run_config["epochs"]):
-        # 1) One epoch of training
-        loss, acc = train(model, optimizer, features, adj, labels, idx_train, epoch, use_cuda)
 
-        # 2) Evaluate on test set at end of this epoch
+    # Training loop with early stopping
+    for epoch in range(run_config["epochs"]):
+        loss, acc = train(model, optimizer, features, adj, labels, idx_train, epoch, use_cuda)
         loss_test, acc_test = test(model, features, adj, labels, idx_test, epoch)
-        
+
         if acc_test > best_accuracy:
             best_accuracy = acc_test
+            epochs_without_improvement = 0
         else:
-            epochs_without_improvement +=1
-        
-        if epochs_without_improvement >= config['early_stopping_patience']:
-            print(f"Early stopping triggered at epoch {epoch}")
+            epochs_without_improvement += 1
+
+        if epochs_without_improvement >= run_config["early_stopping_patience"]:
+            print(f"Early stopping at epoch {epoch}")
             break
+
     print("Training completed.")
-    
-    # Apply Attack
-    if run_config.get("apply_attack", False):
-        target_node = idx_test[0].item()
-        n_perturbations = run_config.get("n_perturbations", 3)
-
-        print(f"\n[ Nettack ] Targeting node {target_node} with {n_perturbations} perturbations...")
-        perturbed_adj, perturbed_features = apply_nettack(model, adj, features, labels, target_node, n_perturbations)
-
-        model.eval()
-        output = model(perturbed_features, perturbed_adj)
-        pred = output[target_node].argmax().item()
-        true = labels[target_node].item()
-
-        print(f"After attack: Target node {target_node} - True: {true}, Pred: {pred}")
-        wandb.log({"attack_target_node": target_node, "true_label": true, "predicted_label": pred})
-
 
 if __name__ == "__main__":
     main()
-
-
-
