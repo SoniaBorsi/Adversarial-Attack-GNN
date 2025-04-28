@@ -1,59 +1,55 @@
-import torch 
-import numpy as np
-from deeprobust.graph.data import Dataset
-from deeprobust.graph.defense import Metattack
-from deeprobust.graph.utils import preprocess, accuracy
-from deeprobust.graph.global_attack import GCN
-from torch_geometric.datasets import Planetoid, WebKB, OGB_MAG
+import torch
+import scipy.sparse as sparse
+from deeprobust.graph.global_attack import Metattack
 from torch_geometric.utils import to_scipy_sparse_matrix
 
 
-# Load datasets
-def load_dataset(name):
-    if name in ['Cora', 'Citeseer', 'Pubmed']:
-        dataset = Planetoid(root=f"data/{name}", name=name)
-    elif name in ['Texas', 'Polblogs']:
-        dataset = WebKB(root=f"data/{name}", name=name)
-    elif name == 'ogbn-proteins':
-        dataset = OGB_MAG(root="data/ogbn-proteins", name=name)
-    else:
-        raise ValueError(f"Dataset {name} not supported.")
-    return dataset[0]
-
-# Prepare data for Metattack
-def prepare_data(data):
-    adj = to_scipy_sparse_matrix(data.edge_index).tocoo()
-    features = data.x.numpy()
+def apply_metattack(model, data, num_perturbations):
+    """
+    Apply Metattack to the given model and data.
+    Args:
+        model (torch.nn.Module): The trained model.
+        data (Data): The input data containing node features and edge indices.
+        num_perturbations (int): Number of perturbations to apply.
+    Returns:
+        tuple: Modified adjacency matrix and features.
+    """
+    
+    # Convert adjacency matrix and features to sparse format
+    adj = to_scipy_sparse_matrix(data.edge_index, num_nodes=data.num_nodes).tocsr()
+    features = sparse.csr_matrix(data.x.numpy())
     labels = data.y.numpy()
-    idx_train = data.train_mask.nonzero(as_tuple=True)[0].numpy()
-    idx_val = data.val_mask.nonzero(as_tuple=True)[0].numpy()
-    idx_test = data.test_mask.nonzero(as_tuple=True)[0].numpy()
-    return adj, features, labels, idx_train, idx_val, idx_test
 
-# Perform Metattack
-def run_metattack(dataset_name):
-    print(f"Running Metattack on {dataset_name}...")
-    data = load_dataset(dataset_name)
-    adj, features, labels, idx_train, idx_val, idx_test = prepare_data(data)
-
-    # Preprocess data
-    adj, features, labels = preprocess(adj, features, labels, preprocess_adj=False)
+    # Get train and unlabeled indices
+    idx_train = data.train_mask.nonzero(as_tuple=True)[0].cpu().numpy()
+    idx_unlabeled = (~data.train_mask).nonzero(as_tuple=True)[0].cpu().numpy()
 
     # Initialize Metattack
-    model = Metattack(model=None, nnodes=adj.shape[0], feature_shape=features.shape, attack_structure=True, attack_features=False, device='cpu')
-    model = model.to('cpu')
+    attacker = Metattack(
+        model=model,
+        nnodes=data.num_nodes,
+        attack_structure=True,
+        attack_features=False,
+        device='cpu'
+    )
 
-    # Train Metattack
-    model.attack(features, adj, labels, idx_train, idx_val, perturbations=100)
+    # Perform attack
+    attacker.attack(
+        features,
+        adj,
+        labels,
+        idx_train,
+        idx_unlabeled,
+        n_perturbations=num_perturbations,
+        ll_constraint=False  # This avoids the sparse tensor issue
+    )
 
-    # Get perturbed adjacency matrix
-    modified_adj = model.modified_adj
+    # Ensure `modified_adj` and `modified_features` exist and return them
+    modified_adj = attacker.modified_adj
+    modified_features = attacker.modified_features
 
-    print("Metattack completed.")
-    return modified_adj
+    # If Metattack doesn't return features, use the original
+    if modified_features is None:
+        modified_features = data.x
 
-# Example usage
-datasets = ['Cora', 'Citeseer', 'Pubmed', 'Polblogs', 'Texas', 'ogbn-proteins']
-for dataset_name in datasets:
-    modified_adj = run_metattack(dataset_name)
-    print(f"Modified adjacency matrix for {dataset_name} obtained.")
+    return attacker.modified_adj, attacker.modified_features
