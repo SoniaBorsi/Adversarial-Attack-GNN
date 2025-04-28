@@ -48,6 +48,11 @@ HOW TO RUN:
     python main.py
 
 This will run the experiment on the specified datasets and print the evaluation metrics after applying Metattack.
+
+NOTE: 
+    After you run the script, there should be a folder called "data" will contain the Cora, Citeseer, 
+    and Texas datasets.
+    Another folder called "tmp" will contain the PolBlogs dataset.
 '''
 
 '''
