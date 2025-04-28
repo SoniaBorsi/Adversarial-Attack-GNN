@@ -62,7 +62,20 @@ You should have generated a couple of new folders (right now with Cora, Citeseer
 4. "results" folder - containing a `.txt` file outputting the evaluation metrics before and after metattack.
 5. "visuals" folder - containing the dataset visuals before and after the attack.
 
+## Specifications
 
-   
+To check which specs you have run these lines in the terminal:
+
+```bash
+python -c "import torch; print(torch.__version__)"
+conda --version
+```
+
+my specs are as followed: 
+
+```bash
+2.4.1+cu121
+conda 23.1.0
+```
 
      
