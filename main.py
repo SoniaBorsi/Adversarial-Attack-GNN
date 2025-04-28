@@ -42,7 +42,22 @@ def run_experiment(dataset_name):
     print(f"    Number of classes: {num_classes}\n")
 
     model = GCN(data.num_features, 16, num_classes)
-    model = train_model(model, data)
+
+    # Save the trained model path
+    os.makedirs("trained_models", exist_ok=True)  # Make sure the folder exists
+    model_save_path = os.path.join("trained_models", f"{dataset_name}_model.pt")
+    
+    if os.path.exists(model_save_path):
+        # If the model already exists, load it
+        print(f"Model already exists at {model_save_path}. Loading the model.")
+        model.load_state_dict(torch.load(model_save_path))
+        model.eval()
+    else:
+        # If the model does not exist, train it
+        print(f"Saving mosdel to {model_save_path}")
+        model = train_model(model, data)
+        torch.save(model.state_dict(), model_save_path)
+        print(f"Trained new model and saved to {model_save_path}\n")
 
     # Evaluate the model on the original graph
     acc_clean, precision_clean, recall_clean, f1_clean = before_attack(model, data, dataset_name)
