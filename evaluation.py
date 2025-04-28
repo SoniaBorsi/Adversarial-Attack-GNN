@@ -1,5 +1,9 @@
-from sklearn.metrics import f1_score, precision_score, recall_score
 import torch
+import os
+
+from torch_geometric.utils import to_torch_coo_tensor
+from sklearn.metrics import f1_score, precision_score, recall_score
+
 
 def evaluate_model(model, data, perturbed_adj, perturbed_features):
     """
@@ -77,3 +81,80 @@ def evaluate_model(model, data, perturbed_adj, perturbed_features):
     f1 = f1_score(true, pred_labels, average='macro', zero_division=0)
 
     return acc, precision, recall, f1
+
+
+def before_attack(model, data, dataset_name):
+    """
+    Evaluate the model on the original graph before any attack.
+    Args:
+        model (torch.nn.Module): The trained model.
+        data (Data): The input data containing node features and edge indices.
+        dataset_name (str): Name of the dataset.
+    Returns:
+        tuple: Accuracy, precision, recall, and F1 score.
+    """
+
+    print("-" * 100)
+    print("Evaluating on clean (original) graph...")
+
+    # Create PyTorch sparse adjacency matrix
+    original_adj = to_torch_coo_tensor(data.edge_index, edge_attr=None, size=(data.num_nodes, data.num_nodes))
+
+    acc, precision, recall, f1 = evaluate_model(model,data, original_adj, data.x)
+
+    print(f"Evaluation Metrics BEFORE Metattack on {dataset_name}:")
+    print(f"    Accuracy:    {acc:.4f}")
+    print(f"    Precision:   {precision:.4f}")
+    print(f"    Recall:      {recall:.4f}")
+    print(f"    F1 Score:    {f1:.4f}")
+
+    # Save BEFORE ATTACK metrics to eval_results.txt
+    os.makedirs("results", exist_ok=True)  # make sure the folder exists
+    results_path = os.path.join("results", "eval_results.txt")
+
+    with open(results_path, "a") as f:  # "a" to append multiple runs
+        f.write("-" * 100 + "\n")
+        f.write(f"Evaluation Metrics BEFORE Metattack on {dataset_name}:\n")
+        f.write(f"    Accuracy:   {acc:.4f}\n")
+        f.write(f"    Precision:  {precision:.4f}\n")
+        f.write(f"    Recall:     {recall:.4f}\n")
+        f.write(f"    F1 Score:   {f1:.4f}\n\n")  # blank line between datasets
+
+    print(f"    Saved BEFORE ATTACK evaluation metrics to {results_path}")
+
+    return acc, precision, recall, f1
+
+
+def after_attack(model, data, dataset_name, perturbed_adj, perturbed_features):
+    """ 
+    Evaluate the model on the perturbed graph after Metattack.
+    Args:
+        model (torch.nn.Module): The trained model.
+        data (Data): The input data containing node features and edge indices.
+        dataset_name (str): Name of the dataset.
+        perturbed_adj (torch.Tensor): Perturbed adjacency matrix.
+        perturbed_features (torch.Tensor): Perturbed node features.
+    Returns:
+        tuple: Accuracy, precision, recall, and F1 score.
+    """
+    acc, precision, recall, f1 = evaluate_model(model, data, perturbed_adj, perturbed_features)
+    
+    print("-" * 100)
+    print(f"Evaluation Metrics AFTER Metattack on {dataset_name}:")
+    print(f"    Accuracy:   {acc:.4f}")
+    print(f"    Precision:  {precision:.4f}")
+    print(f"    Recall:     {recall:.4f}")
+    print(f"    F1 Score:   {f1:.4f}")
+
+    # Save metrics to eval_results.txt
+    os.makedirs("results", exist_ok=True)  # make sure the folder exists
+    results_path = os.path.join("results", "eval_results.txt")
+
+    with open(results_path, "a") as f:  # "a" to append multiple runs
+        f.write(f"Evaluation Metrics AFTER Metattack on {dataset_name}:\n")
+        f.write(f"    Accuracy:   {acc:.4f}\n")
+        f.write(f"    Precision:  {precision:.4f}\n")
+        f.write(f"    Recall:     {recall:.4f}\n")
+        f.write(f"    F1 Score:   {f1:.4f}\n\n")  # blank line between datasets
+
+    print(f"    Saved AFTER ATTACK evaluation metrics to {results_path}")

@@ -1,5 +1,6 @@
 import torch
 import scipy.sparse as sparse
+
 from deeprobust.graph.global_attack import Metattack
 from torch_geometric.utils import to_scipy_sparse_matrix
 

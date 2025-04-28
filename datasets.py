@@ -1,6 +1,8 @@
 import torch
+
 from torch_geometric.datasets import Planetoid, WebKB, PolBlogs, Flickr
 from ogb.nodeproppred import PygNodePropPredDataset
+from torch_geometric.data import Data
 
 def load_dataset(name):
     """
@@ -52,3 +54,57 @@ def split_masks(data, train_ratio=0.6, val_ratio=0.2):
     data.test_mask[indices[train_size + val_size:]] = True
 
     return data
+
+def patch_data(dataset, dataset_name):
+    """
+    Patch the dataset if needed.
+    Args:
+        dataset (Data): The input data containing node features and edge indices.
+        dataset_name (str): Name of the dataset to patch.
+    Returns:
+        Data: The patched dataset.
+    """
+    
+    if isinstance(dataset, Data):
+        data = dataset  # Already a Data object
+    else:
+        data = dataset[0]  # Dataset is a list-like object (like Planetoid)
+
+    if data.x is None:
+        # Patching missing features (for PolBlogs, speficially)
+        # All zero-features carry no useful info -> poor performance,
+        # so each node has a unique identifier (one-hot encoding). 
+        # GNN can differentiate them based on graph structure + node identity
+        print(f"    {dataset_name} patching missing features...")       #DEBUG
+        data.x = torch.eye(data.num_nodes)
+
+    # Check the shape of the masks and labels BEFORE: debug
+    #print(f"train_mask shape: {data.train_mask.shape}")        # DEBUG
+    #print(f"data.y shape: {data.y.shape}")     # DEBUG
+
+    if not hasattr(data, 'train_mask') or data.train_mask.shape[0] != data.num_nodes:
+        # dataset that doesnt come with masks ie. built-in train/test/val splits
+        print(f"    {dataset_name} making masks...")        #DEBUG
+        data = split_masks(data)
+    else:
+        if len(data.train_mask.shape) > 1:
+            # If the train_mask exists but is not 1D, fix it to be
+            print(f"    Fixing train_mask_shape for {dataset_name}...")     #DEBUG
+            data.train_mask = data.train_mask.view(-1)
+
+    # check train_mask is correct (Texas)
+    if data.train_mask.shape[0] != data.num_nodes:
+        # Truncate or adjust the size
+        print(f"    Adjusting train_masks size for {dataset_name}...")      #DEBUG
+        data.train_mask = data.train_mask[:data.num_nodes]
+
+    if len(data.train_mask.shape) == 1:
+        # Ensure it is boolean
+        data.train_mask = data.train_mask.to(torch.bool)
+
+    # Check the shape of the masks and labels AFTER: debug
+    #print(f"train_mask shape: {data.train_mask.shape}")        # DEBUG
+    #print(f"data.y shape: {data.y.shape}")     # DEBUG
+
+    return data
+
