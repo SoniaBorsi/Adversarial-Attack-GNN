@@ -1,75 +1,144 @@
+# ───────────────────────────── main.py ─────────────────────────────
 import time
 import torch
-import torch.nn.functional as F
 import torch.optim as optim
 import wandb
 
-from model import GCN
-from data import load_data
+from model  import GCN
+from data   import load_data
 from config import config
-from utils import train, test
+from utils  import train, test
 
-def main():
-    # Initialize wandb
+
+def main() -> None:
+    # ------------------------- wandb init -------------------------------
     wandb.init(
         project="gnn",
         config=config,
         name=f"{config['active_dataset']}_run_{int(time.time())}",
     )
-    run_config = wandb.config
+    cfg = wandb.config
 
-    # Select dataset folder
-    dataset_path = run_config["datasets"][run_config["active_dataset"]]
+    # ------------------------- load data --------------------------------
+    root = cfg["datasets"][cfg["active_dataset"]]
+    adj, feats, labels, idx_tr, idx_te = load_data(
+        root,
+        dataset=cfg["active_dataset"],
+        use_perturbed=cfg["use_perturbed"],
+    )
 
-    # Check if the user wants to load the perturbed dataset
-    if run_config["use_perturbed"]:
-        perturbed_path = dataset_path.rstrip("/") + "/perturbed/"
-        print("→ Loading perturbed dataset from:", perturbed_path)
-        dataset_path = perturbed_path
-    else:
-        print("→ Loading original dataset from:", dataset_path)
-
-    # Load dataset
-    adj, features, labels, idx_train, idx_test = load_data(dataset_path)
-
-    # Set up the GCN model
+    # ------------------------- build model ------------------------------
     model = GCN(
-        nfeat=features.shape[1],
-        nhid=run_config["hidden"],
-        nclass=labels.max().item() + 1,
-        dropout=run_config["dropout"],
-    )
-    optimizer = optim.Adam(
-        model.parameters(),
-        lr=run_config["lr"],
-        weight_decay=run_config["weight_decay"]
+        nfeat   = feats.shape[1],
+        nhid    = cfg["hidden"],
+        nclass  = labels.max().item() + 1,
+        dropout = cfg["dropout"],
     )
 
-    use_cuda = run_config["use_cuda"] and torch.cuda.is_available()
+    optimiser = optim.Adam(
+        model.parameters(),
+        lr=cfg["lr"],
+        weight_decay=cfg["weight_decay"],
+    )
+
+    use_cuda = cfg["use_cuda"] and torch.cuda.is_available()
     if use_cuda:
         model.cuda()
-        features, adj, labels = features.cuda(), adj.cuda(), labels.cuda()
-        idx_train, idx_test = idx_train.cuda(), idx_test.cuda()
+        feats, adj, labels = feats.cuda(), adj.cuda(), labels.cuda()
+        idx_tr, idx_te    = idx_tr.cuda(), idx_te.cuda()
 
-    best_accuracy = 0.0
-    epochs_without_improvement = 0
+    # ------------------------- training loop ----------------------------
+    best, impatience = 0.0, 0
+    for epoch in range(cfg["epochs"]):
+        train_loss, _ = train(model, optimiser,
+                              feats, adj, labels, idx_tr, epoch, use_cuda)
+        val_loss, acc = test(model, feats, adj, labels, idx_te, epoch)
 
-    # Training loop with early stopping
-    for epoch in range(run_config["epochs"]):
-        loss, acc = train(model, optimizer, features, adj, labels, idx_train, epoch, use_cuda)
-        loss_test, acc_test = test(model, features, adj, labels, idx_test, epoch)
-
-        if acc_test > best_accuracy:
-            best_accuracy = acc_test
-            epochs_without_improvement = 0
+        if acc > best:
+            best, impatience = acc, 0
         else:
-            epochs_without_improvement += 1
+            impatience += 1
 
-        if epochs_without_improvement >= run_config["early_stopping_patience"]:
-            print(f"Early stopping at epoch {epoch}")
+        if impatience >= cfg["early_stopping_patience"]:
+            print(f"Early stopping at epoch {epoch} – best acc {best:.4f}")
             break
 
     print("Training completed.")
 
+
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+# import time, torch, torch.optim as optim, wandb
+# from model  import GCN
+# from data   import load_data
+# from config import config
+# from utils  import train, test
+
+
+# def main() -> None:
+#     # ─────────────────────── wandb init ────────────────────────
+#     wandb.init(
+#         project="gnn",
+#         config=config,
+#         name=f"{config['active_dataset']}_run_{int(time.time())}",
+#     )
+#     cfg = wandb.config            # handy alias
+
+#     # ────────────────── decide which folder to read ─────────────
+#     data_root = cfg["datasets"][cfg["active_dataset"]]
+#     if cfg["use_perturbed"]:
+#         data_root = data_root.rstrip("/") + "/perturbed/"
+#         print(f"→ Loading PERTURBED dataset from: {data_root}")
+#     else:
+#         print(f"→ Loading ORIGINAL dataset from:  {data_root}")
+
+#     # `load_data` understands both the original folder and the
+#     #   .../perturbed/ sub-folder that holds the two CSVs.
+#     adj, features, labels, idx_tr, idx_te = load_data(data_root)
+
+#     # ─────────────────────── build model ───────────────────────
+#     model = GCN(
+#         nfeat   = features.shape[1],
+#         nhid    = cfg["hidden"],
+#         nclass  = labels.max().item() + 1,
+#         dropout = cfg["dropout"],
+#     )
+#     optimiser = optim.Adam(model.parameters(),
+#                            lr=cfg["lr"],
+#                            weight_decay=cfg["weight_decay"])
+
+#     use_cuda = cfg["use_cuda"] and torch.cuda.is_available()
+#     if use_cuda:
+#         model.cuda()
+#         features, adj, labels = features.cuda(), adj.cuda(), labels.cuda()
+#         idx_tr,  idx_te      = idx_tr.cuda(),  idx_te.cuda()
+
+#     # ───────────────── training loop (+ early stopping) ─────────
+#     best_acc, stagnation = 0.0, 0
+#     for epoch in range(cfg["epochs"]):
+#         train_loss, _   = train(model, optimiser,
+#                                 features, adj, labels, idx_tr, epoch, use_cuda)
+#         val_loss,  acc  = test(model,
+#                                features, adj, labels, idx_te, epoch)
+
+#         if acc > best_acc:
+#             best_acc, stagnation = acc, 0
+#         else:
+#             stagnation += 1
+
+#         if stagnation >= cfg["early_stopping_patience"]:
+#             print(f"Early stopping (epoch {epoch}) – best acc {best_acc:.4f}")
+#             break
+
+#     print("Training completed.")
+
+
+# if __name__ == "__main__":
+#     main()
