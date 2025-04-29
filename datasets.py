@@ -1,8 +1,10 @@
 import torch
+import constants
 
 from torch_geometric.datasets import Planetoid, WebKB, PolBlogs, Flickr
 from ogb.nodeproppred import PygNodePropPredDataset
 from torch_geometric.data import Data
+from torch_geometric.utils import k_hop_subgraph
 
 def load_dataset(name):
     """
@@ -15,18 +17,30 @@ def load_dataset(name):
         ValueError: If the dataset name is not recognized.
     """
 
-    if name in ["Cora", "Citeseer", "PubMed"]:
-        return Planetoid(root=f"./data/{name}", name=name)[0]
-    elif name == "Texas":
-        return WebKB(root=f"./data/{name}", name=name)[0]
-    elif name == "PolBlogs":
-        return PolBlogs(root=f"./tmp/polblogs")[0]
-    elif name == "ogbn-proteins":
-        return PygNodePropPredDataset(root="./data/ogb", name="ogbn-proteins")[0]
-    elif name == "Flickr":
-        return Flickr(root=f"./data/Flickr")[0]
+    if name in [constants.CORA, constants.CITESEER, constants.PUBMED]:
+        data = Planetoid(root=f"./data/{name}", name=name)[0]
+    elif name == constants.TEXAS:
+        data = WebKB(root=f"./data/{name}", name=name)[0]
+    elif name == constants.POLBLOGS:
+        data = PolBlogs(root=f"./tmp/polblogs")[0]
+    elif name == constants.OGBN_PROTEINS:
+        data = PygNodePropPredDataset(root="./data/ogb", name="ogbn-proteins")[0]
+    elif name == constants.FLICKR:
+        data = Flickr(root=f"./data/Flickr")[0]
     else:
         raise ValueError("Dataset not found")
+
+    # After loading, optionally apply subgraph extraction
+    if name in [constants.FLICKR, constants.OGBN_PROTEINS, constants.PUBMED]:
+        print(f"Extracting subgraph for {name}...")
+        data = extract_subgraph(data, 
+            num_hops=2, 
+            min_num_nodes=3000, 
+            num_center_nodes=10,
+            max_attempts=10
+        )
+
+    return data
 
 
 def split_masks(data, train_ratio=0.6, val_ratio=0.2):
@@ -108,3 +122,54 @@ def patch_data(dataset, dataset_name):
 
     return data
 
+def extract_subgraph(data, num_hops, min_num_nodes, num_center_nodes, max_attempts):
+    """
+    Extract a subgraph from the dataset.
+    Args:
+        data (Data): The input data containing node features and edge indices.
+        num_hops (int): Number of hops to consider for subgraph extraction.
+        min_num_nodes (int): Minimum number of nodes required in the subgraph.
+        num_center_nodes (int): Number of center nodes to sample for subgraph extraction.
+        max_attempts (int): Maximum number of attempts to find a valid subgraph.
+    Returns:
+        Data: The extracted subgraph.
+    """
+    
+    device = data.x.device
+    attempt = 0
+
+    while attempt < max_attempts:
+        center_nodes = torch.randint(0, data.num_nodes, (num_center_nodes,), device=device)
+
+        subset_nodes, sub_edge_index, mapping, edge_mask = k_hop_subgraph(
+            node_idx=center_nodes,
+            num_hops=num_hops,
+            edge_index=data.edge_index,
+            relabel_nodes=True
+        )
+
+        print(f"Attempt {attempt + 1}: Found {subset_nodes.size(0)} nodes.")  # DEBUG
+
+        if subset_nodes.size(0) >= min_num_nodes:
+            break  # Good enough!
+        
+        attempt += 1
+        num_center_nodes = int(num_center_nodes * 1.5)  # Try sampling more centers next round
+
+    # No slicing! Keep all nodes and edges found.
+
+    sub_x = data.x[subset_nodes]
+    sub_y = data.y[subset_nodes]
+
+    # Relabel labels to be contiguous
+    unique_labels = sub_y.unique()
+    label_map = {old.item(): new for new, old in enumerate(unique_labels)}
+    sub_y = torch.tensor([label_map[label.item()] for label in sub_y], device=sub_y.device)
+
+    subgraph = Data(
+        x=sub_x,
+        edge_index=sub_edge_index,
+        y=sub_y
+    )
+
+    return subgraph

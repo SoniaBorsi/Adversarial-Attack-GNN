@@ -1,19 +1,6 @@
 import torch
-import torch_geometric
-import deeprobust
 import os
-
-import networkx as nx
-import matplotlib.pyplot as plt
-import scipy.sparse as sparse
-import torch.nn.functional as F
-import numpy as np
-
-from torch_geometric.transforms import NormalizeFeatures
-from torch_geometric.nn import GCNConv
-from torch_geometric.utils import to_scipy_sparse_matrix, subgraph, to_torch_coo_tensor
-from torch_geometric.data import Data
-from torch_sparse import from_scipy
+import constants
 
 # Import the other files
 from datasets import load_dataset, split_masks, patch_data
@@ -50,11 +37,11 @@ def run_experiment(dataset_name):
     if os.path.exists(model_save_path):
         # If the model already exists, load it
         print(f"Model already exists at {model_save_path}. Loading the model.")
-        model.load_state_dict(torch.load(model_save_path))
+        model.load_state_dict(torch.load(model_save_path, weights_only=True))
         model.eval()
     else:
         # If the model does not exist, train it
-        print(f"Saving mosdel to {model_save_path}")
+        print(f"Saving model to {model_save_path}")
         model = train_model(model, data)
         torch.save(model.state_dict(), model_save_path)
         print(f"Trained new model and saved to {model_save_path}\n")
@@ -100,23 +87,23 @@ if __name__ == "__main__":
     Note: Some datasets may take a long time to run or may require more memory.
     """
     # all datasets, uncomment when debugged all
-    #datasets = ["Cora", "Citeseer", "PolBlogs", "Texas", "Flickr", "PubMed", "ogbn-proteins"]
+    #datasets = [constants.CORA, constants.CITESEER, constants.POLBLOGS, constants.TEXAS, constants.FLICKR, constants.PUBMED, constants.OGBN_PROTEINS]
 
     # For now, core datasets 
-    datasets = ["Cora", "Citeseer", "PolBlogs", "Texas"]
+    #datasets = [constants.CORA, constants.CITESEER, constants.POLBLOGS, contants.TEXAS]
 
     # TODO: debug these datasets
     # These datasets crash - reason: too big, use all available RAM
-    #datasets = [ "ogbn-proteins", "Flickr", "PubMed"]
+    datasets = [constants.PUBMED, constants.FLICKR, constants.OGBN_PROTEINS]
 
     # For debugging purposes, uncomment the dataset you want to run
-    #datasets = ["Cora"]
-    #datasets = ["Citeseer"]
-    #datasets = ["PolBlogs"]
-    #datasets = ["Texas"]
-    #datasets = ["Flickr"]
-    #datasets = ["PubMed"]
-    #datasets = ["ogbn-proteins"]
+    #datasets = [constants.CORA]
+    #datasets = [constants.CITESEER]
+    #datasets = [constants.POLBLOGS]
+    #datasets = [constants.TEXAS]
+    #datasets = [constants.FLICKR]
+    #datasets = [constants.PUBMED]
+    #datasets = [constants.OGBN_PROTEINS]
 
     for dataset_name in datasets:
         run_experiment(dataset_name)
