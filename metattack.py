@@ -25,14 +25,26 @@ def apply_metattack(model, data, num_perturbations):
     idx_train = data.train_mask.nonzero(as_tuple=True)[0].cpu().numpy()
     idx_unlabeled = (~data.train_mask).nonzero(as_tuple=True)[0].cpu().numpy()
 
+    model.eval()
+    with torch.no_grad():
+        model.output = model(data.x, data.edge_index) 
+
     # Initialize Metattack
     attacker = Metattack(
         model=model,
         nnodes=data.num_nodes,
         attack_structure=True,
         attack_features=False,
-        device='cpu'
+        device='cpu',
+        with_bias=False, 
+        lr=0.05,
+        momentum=0.9
     )
+
+    # for PolBlogs
+    if not attacker.attack_features:
+        attacker.feature_changes = torch.zeros_like(torch.from_numpy(features.todense()))
+
 
     # Perform attack
     attacker.attack(
@@ -45,12 +57,8 @@ def apply_metattack(model, data, num_perturbations):
         ll_constraint=False  # This avoids the sparse tensor issue
     )
 
-    # Ensure `modified_adj` and `modified_features` exist and return them
-    modified_adj = attacker.modified_adj
-    modified_features = attacker.modified_features
-
     # If Metattack doesn't return features, use the original
-    if modified_features is None:
-        modified_features = data.x
+    if attacker.modified_features is None:
+        attacker.modified_features = data.x
 
     return attacker.modified_adj, attacker.modified_features

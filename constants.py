@@ -8,3 +8,5 @@ TEXAS = "Texas"
 POLBLOGS = "PolBlogs"
 OGBN_PROTEINS = "ogbn-proteins"
 FLICKR = "Flickr"
+
+RES_PATH = "results/eval_results.txt"

@@ -1,52 +1,40 @@
+****************************************************************************************************
+Running Metattack with 406 perturbations
+
 ----------------------------------------------------------------------------------------------------
-Evaluation Metrics BEFORE Metattack on Cora:
+Evaluation Metrics on clean Cora:
     Accuracy:   0.8010
-    Precision:  0.7813
-    Recall:     0.8205
-    F1 Score:   0.7949
+    Precision:  0.7790
+    Recall:     0.8177
+    F1 Score:   0.7951
 
-Evaluation Metrics AFTER Metattack on Cora:
-    Accuracy:   0.8020
-    Precision:  0.7817
-    Recall:     0.8216
-    F1 Score:   0.7955
+Evaluation Metrics on poisoned Cora:
+    Accuracy:   0.7500
+    Precision:  0.7336
+    Recall:     0.7700
+    F1 Score:   0.7403
 
-----------------------------------------------------------------------------------------------------
-Evaluation Metrics BEFORE Metattack on Citeseer:
-    Accuracy:   0.6820
-    Precision:  0.6521
-    Recall:     0.6431
-    F1 Score:   0.6446
+Metric Comparison: Cora:
+    Accuracy Drop:        0.0510
+    Attack Success Rate:  0.0637
 
-Evaluation Metrics AFTER Metattack on Citeseer:
-    Accuracy:   0.6800
-    Precision:  0.6499
-    Recall:     0.6417
-    F1 Score:   0.6430
+****************************************************************************************************
+Running Metattack with 812 perturbations
 
 ----------------------------------------------------------------------------------------------------
-Evaluation Metrics BEFORE Metattack on PolBlogs:
-    Accuracy:   0.8188
-    Precision:  0.8618
-    Recall:     0.8211
-    F1 Score:   0.8140
+Evaluation Metrics on clean Cora:
+    Accuracy:   0.8050
+    Precision:  0.7854
+    Recall:     0.8173
+    F1 Score:   0.7980
 
-Evaluation Metrics AFTER Metattack on PolBlogs:
-    Accuracy:   0.8188
-    Precision:  0.8618
-    Recall:     0.8211
-    F1 Score:   0.8140
+Evaluation Metrics on poisoned Cora:
+    Accuracy:   0.7090
+    Precision:  0.6912
+    Recall:     0.7073
+    F1 Score:   0.6862
 
-----------------------------------------------------------------------------------------------------
-Evaluation Metrics BEFORE Metattack on Texas:
-    Accuracy:   0.4167
-    Precision:  0.2025
-    Recall:     0.2892
-    F1 Score:   0.2381
-
-Evaluation Metrics AFTER Metattack on Texas:
-    Accuracy:   0.4167
-    Precision:  0.2025
-    Recall:     0.2892
-    F1 Score:   0.2381
+Metric Comparison: Cora:
+    Accuracy Drop:        0.0960
+    Attack Success Rate:  0.1193
 

@@ -3,13 +3,13 @@ import os
 import constants
 
 # Import the other files
-from datasets import load_dataset, split_masks, patch_data
+from datasets import load_dataset, split_masks, patch_data, perturbed_dataset
 from model import GCN, train_model
 from metattack import apply_metattack
-from evaluation import evaluate_model, before_attack, after_attack
-from visualization import visualize_graph, perturbed_graph
+from evaluation import evaluate_model, before_attack, after_attack, compare_results
+from visualization import visualize_graph
 
-def run_experiment(dataset_name):
+def run_experiment(dataset_name, first_run):
     """
     Run the experiment for a given dataset.
     Args:
@@ -17,67 +17,115 @@ def run_experiment(dataset_name):
     """
 
     print("*" * 100) # Separate the dataset run 
+
+    # Load the dataset and patch --------------------------------
     dataset = load_dataset(dataset_name)
     data = patch_data(dataset, dataset_name)
-
+    poisoned_data = data.clone()
     num_classes = len(torch.unique(data.y))
+    num_perturbations = int(data.num_nodes * 0.3)
 
-    print("=" * 100)
+    print(f"Number of perturbations: {num_perturbations}")
+
+    if first_run: # Write num perturbations in file
+        os.makedirs("results", exist_ok=True)  
+        with open(constants.RES_PATH, "a") as f:  
+            f.write("*" * 100 + "\n")
+            f.write(f"Running Metattack with {num_perturbations} perturbations\n\n")
+
     print(f"Dataset: {dataset_name}")
-    print(f"    Number of nodes: {data.num_nodes}")
+    print(f"    Number of nodes: {data.num_nodes}") 
     print(f"    Number of features: {data.num_features}")
     print(f"    Number of classes: {num_classes}\n")
 
-    model = GCN(data.num_features, 16, num_classes)
+    # Train and evaluate on clean model, save graph ----------------------------------------
+    clean_model = GCN(data.num_features, 16, num_classes)
+    os.makedirs("clean_models", exist_ok=True)  # Make sure the folder exists
+    clean_model_path = os.path.join("clean_models", f"{dataset_name}_clean{num_perturbations}.pt")
 
-    # Save the trained model path
-    os.makedirs("trained_models", exist_ok=True)  # Make sure the folder exists
-    model_save_path = os.path.join("trained_models", f"{dataset_name}_model.pt")
-    
-    if os.path.exists(model_save_path):
-        # If the model already exists, load it
-        print(f"Model already exists at {model_save_path}. Loading the model.")
-        model.load_state_dict(torch.load(model_save_path, weights_only=True))
-        model.eval()
+    if os.path.exists(clean_model_path):
+        print(f"Model already exists at {clean_model_path}. Loading the model.")
+        clean_model.load_state_dict(torch.load(clean_model_path, weights_only=True))
     else:
-        # If the model does not exist, train it
-        print(f"Saving model to {model_save_path}")
-        model = train_model(model, data)
-        torch.save(model.state_dict(), model_save_path)
-        print(f"Trained new model and saved to {model_save_path}\n")
+        print(f"Training and saving clean model to {clean_model_path}")
+        clean_model = train_model(clean_model, data)
+        torch.save(clean_model.state_dict(), clean_model_path)
 
-    # Evaluate the model on the original graph
-    acc_clean, precision_clean, recall_clean, f1_clean = before_attack(model, data, dataset_name)
+    clean_model.eval()
+    acc_clean, prec_clean, rec_clean, f1_clean = before_attack(
+        clean_model, data, dataset_name
+    )
     
     if data.num_nodes <= 5000:
         # Visualize the original graph if it is small enough
         print("-" * 100)
-        print("Original Graph")
-        visualize_graph(data.edge_index, title=f"{dataset_name}: Before Metattack", save_dir="visuals")
+        print("Original Graph:")
+        visualize_graph(
+            data.edge_index, 
+            title=f"{dataset_name}_clean_pert{num_perturbations}", 
+            save_dir="visuals"
+        )
 
-    # TODO: increase num_perturbations for larger datasets
-    # For larger datasets, use a smaller percentage of edges to perturb
-    # num_perturbations = int(data.edge_index.size(1) * 0.01)
-    num_perturbations = 5 # Base code for now
-    print(f"    Running Metattack on {num_perturbations} perturbations")
+    # Apply Metattack ------------------------------------------------------
+    poisoned_model = GCN(poisoned_data.num_features, 16, num_classes)
+    poisoned_model_path = os.path.join("poisoned_models", f"{dataset_name}_poisoned{num_perturbations}.pt")
+    os.makedirs("poisoned_models", exist_ok=True)
 
-    # Apply Metattack
-    perturbed_adj, perturbed_features = apply_metattack(model, data, num_perturbations=num_perturbations)
-    edge_index_perturbed = perturbed_adj.nonzero().t()
+    poisoned_perturbed_adj, poisoned_perturbed_features = apply_metattack(
+        poisoned_model, 
+        poisoned_data, 
+        num_perturbations=num_perturbations
+    )
 
-    # Save the perturbed dataset
-    perturbed_graph(perturbed_adj, perturbed_features, data, dataset_name)
+    original_adj = torch.zeros((data.num_nodes, data.num_nodes), dtype=torch.int32)
+    original_adj[data.edge_index[0], data.edge_index[1]] = 1
+    poisoned_adj = poisoned_perturbed_adj.to(torch.int32)
 
-    # Perturbed stuff
-    if data.num_nodes <= 5000:
-        # Visualize the perturbed graph if it is small enough
-        print("-" * 100)
-        print("Perturbed Graph")
-        visualize_graph(edge_index_perturbed, title=f"{dataset_name}: After Metattack", save_dir="visuals")
+    diff = (original_adj != poisoned_adj).sum().item()
+    print(f"\n[DEBUG] Number of changed entries in adjacency matrix: {diff}")
+    expected = num_perturbations * 2
+    if diff < expected:
+        print(f"[WARNING] Fewer than expected edge changes! Got {diff}, expected at least ~{expected}")
     
-    # Evaluate the model on the perturbed graph
-    after_attack(model, data, dataset_name, perturbed_adj, perturbed_features)
+    edge_index_perturbed = poisoned_perturbed_adj.nonzero().t()
+    
+    # Save the perturbed dataset
+    perturbed_dataset(poisoned_perturbed_adj, poisoned_perturbed_features, data, dataset_name, num_perturbations)
+    
+    # Train and evaluate on poisoned dataset, save graph --------------------------------------------------------------
+    poisoned_data.edge_index = edge_index_perturbed
+    poisoned_data.x = poisoned_perturbed_features
 
+    if os.path.exists(poisoned_model_path):
+        print(f"Poisoned model already exists at {poisoned_model_path}. Loading the model.")
+        poisoned_model.load_state_dict(torch.load(poisoned_model_path, weights_only=True))
+    else:
+        print(f"Training and saving poisoned model to {poisoned_model_path}")
+        poisoned_model = train_model(poisoned_model, poisoned_data)
+        torch.save(poisoned_model.state_dict(), poisoned_model_path)
+
+    poisoned_model.eval()
+    acc_poisoned, prec_poisoned, rec_poisoned, f1_poisoned = after_attack(
+        poisoned_model, poisoned_data, dataset_name,
+        poisoned_perturbed_adj, poisoned_perturbed_features
+    )
+
+    if data.num_nodes <= 5000:
+        print("-" * 100)
+        print("Perturbed Graph:")
+        visualize_graph(
+            edge_index_perturbed,
+            title=f"{dataset_name}_poisoned_pert{num_perturbations}",
+            save_dir="visuals"
+        )
+    
+    # Compare metrics --------------------------------------------------------------
+    compare_results(
+        dataset_name,
+        acc_clean, prec_clean, rec_clean, f1_clean,
+        acc_poisoned, prec_poisoned, rec_poisoned, f1_poisoned
+    )
+    
 
 if __name__ == "__main__": 
     """
@@ -90,14 +138,14 @@ if __name__ == "__main__":
     #datasets = [constants.CORA, constants.CITESEER, constants.POLBLOGS, constants.TEXAS, constants.FLICKR, constants.PUBMED, constants.OGBN_PROTEINS]
 
     # For now, core datasets 
-    #datasets = [constants.CORA, constants.CITESEER, constants.POLBLOGS, contants.TEXAS]
+    #datasets = [constants.CORA, constants.CITESEER, constants.POLBLOGS, constants.TEXAS]
 
     # TODO: debug these datasets
     # These datasets crash - reason: too big, use all available RAM
-    datasets = [constants.PUBMED, constants.FLICKR, constants.OGBN_PROTEINS]
+    #datasets = [constants.PUBMED, constants.FLICKR, constants.OGBN_PROTEINS]
 
     # For debugging purposes, uncomment the dataset you want to run
-    #datasets = [constants.CORA]
+    datasets = [constants.CORA]
     #datasets = [constants.CITESEER]
     #datasets = [constants.POLBLOGS]
     #datasets = [constants.TEXAS]
@@ -105,5 +153,8 @@ if __name__ == "__main__":
     #datasets = [constants.PUBMED]
     #datasets = [constants.OGBN_PROTEINS]
 
+    first_run = True
+        
     for dataset_name in datasets:
-        run_experiment(dataset_name)
+        run_experiment(dataset_name, first_run)
+        first_run = False

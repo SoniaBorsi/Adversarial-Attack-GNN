@@ -16,12 +16,12 @@ def visualize_graph(edge_index, title="Graph", save_dir="visuals"):
     Raises:
         ValueError: If edge_index is not in the expected format.
     """
-    # Check if edge_index is a torch tensor and convert to numpy if so
     if isinstance(edge_index, torch.Tensor):
+        # Check if edge_index is a torch tensor and convert to numpy if so
         edge_index = edge_index.cpu().numpy()
 
-    # Check if edge_index is a numpy array and has the correct shape
     if edge_index.shape[0] != 2:
+        # Check if edge_index is a numpy array and has the correct shape
         raise ValueError("Expected edge_index shape [2, num_edges]")
 
     # Convert to list of edge tuples
@@ -38,36 +38,10 @@ def visualize_graph(edge_index, title="Graph", save_dir="visuals"):
     nx.draw(G, node_size=30, edge_color="gray", alpha=0.6, with_labels=False)
     plt.title(title)
 
-    # Sanitize title for filename (optional but good practice)
+    # Sanitize title for filename 
     safe_title = title.replace(" ", "_").replace("/", "_")
     save_path = os.path.join(save_dir, f"{safe_title}.png")
 
     plt.savefig(save_path) # Save the figure
     plt.close()  # Close the plot to free memory
-    print(f"    Graph saved to {save_path}")
-
-
-def perturbed_graph(perturbed_adj, perturbed_features, data, dataset_name):
-    """
-    Save the perturbed dataset.
-    Args:
-        perturbed_adj (torch.Tensor): The perturbed adjacency matrix.
-        perturbed_features (torch.Tensor): The perturbed node features.
-        data (Data): The original data object containing node features and edge indices.
-        dataset_name (str): Name of the dataset to save the perturbed data for.
-    """
-    # Save the perturbed dataset
-    os.makedirs("perturbed_data", exist_ok=True)  # create a folder if it doesn't exist
-    save_path = os.path.join("perturbed_data", f"{dataset_name}_perturbed.pt")
-
-    # Save perturbed adj and features together
-    torch.save({
-        "perturbed_adj": perturbed_adj,
-        "perturbed_features": perturbed_features,
-        "labels": data.y,  # saving labels in case you want to re-train/eval later
-        "train_mask": data.train_mask,
-        "val_mask": data.val_mask if hasattr(data, 'val_mask') else None,
-        "test_mask": data.test_mask if hasattr(data, 'test_mask') else None
-    }, save_path)
-
-    print(f"    Saved perturbed dataset to {save_path}")
+    print(f"    Graph saved to {save_path}\n")

@@ -1,5 +1,6 @@
 import torch
 import constants
+import os
 
 from torch_geometric.datasets import Planetoid, WebKB, PolBlogs, Flickr
 from ogb.nodeproppred import PygNodePropPredDataset
@@ -89,36 +90,26 @@ def patch_data(dataset, dataset_name):
         # All zero-features carry no useful info -> poor performance,
         # so each node has a unique identifier (one-hot encoding). 
         # GNN can differentiate them based on graph structure + node identity
-        print(f"    {dataset_name} patching missing features...")       #DEBUG
         data.x = torch.eye(data.num_nodes)
-
-    # Check the shape of the masks and labels BEFORE: debug
-    #print(f"train_mask shape: {data.train_mask.shape}")        # DEBUG
-    #print(f"data.y shape: {data.y.shape}")     # DEBUG
 
     if not hasattr(data, 'train_mask') or data.train_mask.shape[0] != data.num_nodes:
         # dataset that doesnt come with masks ie. built-in train/test/val splits
-        print(f"    {dataset_name} making masks...")        #DEBUG
         data = split_masks(data)
     else:
         if len(data.train_mask.shape) > 1:
             # If the train_mask exists but is not 1D, fix it to be
-            print(f"    Fixing train_mask_shape for {dataset_name}...")     #DEBUG
             data.train_mask = data.train_mask.view(-1)
 
-    # check train_mask is correct (Texas)
     if data.train_mask.shape[0] != data.num_nodes:
+        # check train_mask is correct (Texas)
         # Truncate or adjust the size
-        print(f"    Adjusting train_masks size for {dataset_name}...")      #DEBUG
         data.train_mask = data.train_mask[:data.num_nodes]
 
     if len(data.train_mask.shape) == 1:
         # Ensure it is boolean
         data.train_mask = data.train_mask.to(torch.bool)
 
-    # Check the shape of the masks and labels AFTER: debug
-    #print(f"train_mask shape: {data.train_mask.shape}")        # DEBUG
-    #print(f"data.y shape: {data.y.shape}")     # DEBUG
+    print(f"Data.x shape: {data.x.shape}, Data.train_mask shape: {data.train_mask.shape}")
 
     return data
 
@@ -157,7 +148,6 @@ def extract_subgraph(data, num_hops, min_num_nodes, num_center_nodes, max_attemp
         num_center_nodes = int(num_center_nodes * 1.5)  # Try sampling more centers next round
 
     # No slicing! Keep all nodes and edges found.
-
     sub_x = data.x[subset_nodes]
     sub_y = data.y[subset_nodes]
 
@@ -173,3 +163,28 @@ def extract_subgraph(data, num_hops, min_num_nodes, num_center_nodes, max_attemp
     )
 
     return subgraph
+
+def perturbed_dataset(perturbed_adj, perturbed_features, data, dataset_name, num_perturbations):
+    """
+    Save the perturbed dataset.
+    Args:
+        perturbed_adj (torch.Tensor): The perturbed adjacency matrix.
+        perturbed_features (torch.Tensor): The perturbed node features.
+        data (Data): The original data object containing node features and edge indices.
+        dataset_name (str): Name of the dataset to save the perturbed data for.
+    """
+    # Save the perturbed dataset
+    os.makedirs("perturbed_data", exist_ok=True)  # create a folder if it doesn't exist
+    save_path = os.path.join("perturbed_data", f"{dataset_name}_perturbed{num_perturbations}.pt")
+
+    # Save perturbed adj and features together
+    torch.save({
+        "perturbed_adj": perturbed_adj,
+        "perturbed_features": perturbed_features,
+        "labels": data.y,  # saving labels in case you want to re-train/eval later
+        "train_mask": data.train_mask,
+        "val_mask": data.val_mask if hasattr(data, 'val_mask') else None,
+        "test_mask": data.test_mask if hasattr(data, 'test_mask') else None
+    }, save_path)
+
+    print(f"\nSaved perturbed dataset to {save_path}\n")
