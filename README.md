@@ -48,19 +48,31 @@ Machine Learning Project
 
 ## Run the Script
 
+First uncomment the dataset you want:
+
+```python
+if __name__ == "__main__": 
+```
+
+Then, run the script:
+
 ```bash
 python main.py
 ```
 
 # What you should see
 
-You should have generated a couple of new folders (right now with Cora, Citeseer, PolBlogs, and Texas datasets on CPU). 
+You should have generated a couple of new folders (right now with Cora and Citeseer datasets on CPU | PolBlogs and Texas maybe later). 
 
-1. "data" folder - contains Cora, Citeseer, and Texas datasets.
-2. "tmp" folder - contains the PolBlogs dataset.
-3. "perturbed_data" folder - containing the saved perturbed model
-4. "results" folder - containing a `.txt` file outputting the evaluation metrics before and after metattack.
-5. "visuals" folder - containing the dataset visuals before and after the attack.
+folders:
+
+1. **data** - contains Cora and Citeseer datasets.
+2. **tmp** - contains the PolBlogs dataset.
+3. **clean_models** - contains clean models on clean dataset.
+4. **perturbed_data** - contains the poisoned dataset.
+5. **poisoned_models** - contains poisoned models on the poisoned dataset.
+6. **visuals** - containing the dataset visuals before and after the attack.
+7. "results" - containing a `.txt` file outputting the evaluation metrics before and after metattack.
 
 ## Specifications
 
