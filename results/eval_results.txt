@@ -1,40 +1,201 @@
 ****************************************************************************************************
-Running Metattack with 406 perturbations
+Running Metattack with 844 perturbations
 
 ----------------------------------------------------------------------------------------------------
 Evaluation Metrics on clean Cora:
-    Accuracy:   0.8010
-    Precision:  0.7790
-    Recall:     0.8177
-    F1 Score:   0.7951
+    Accuracy:   0.7890
+    Precision:  0.7646
+    Recall:     0.8126
+    F1 Score:   0.7820
 
+---- Run 1 ----
 Evaluation Metrics on poisoned Cora:
-    Accuracy:   0.7500
-    Precision:  0.7336
-    Recall:     0.7700
-    F1 Score:   0.7403
+    Accuracy:   0.7190
+    Precision:  0.7009
+    Recall:     0.7520
+    F1 Score:   0.7125
 
 Metric Comparison: Cora:
-    Accuracy Drop:        0.0510
-    Attack Success Rate:  0.0637
+    Accuracy Drop:        0.0700
+    Attack Success Rate:  0.0887
+
+---- Run 2 ----
+Evaluation Metrics on poisoned Cora:
+    Accuracy:   0.6120
+    Precision:  0.6162
+    Recall:     0.6725
+    F1 Score:   0.6104
+
+Metric Comparison: Cora:
+    Accuracy Drop:        0.1770
+    Attack Success Rate:  0.2243
+
+---- Run 3 ----
+Evaluation Metrics on poisoned Cora:
+    Accuracy:   0.6070
+    Precision:  0.5812
+    Recall:     0.6272
+    F1 Score:   0.5864
+
+Metric Comparison: Cora:
+    Accuracy Drop:        0.1820
+    Attack Success Rate:  0.2307
+
+---- Poisoned Overall ----
+Average and Std for Cora:
+    Accuracy:   0.6460 ± 0.0517
+    Precision:  0.6328 ± 0.0502
+    Recall:     0.6839 ± 0.0516
+    F1 Score:   0.6364 ± 0.0547
+
 
 ****************************************************************************************************
-Running Metattack with 812 perturbations
+Running Metattack with 728 perturbations
 
 ----------------------------------------------------------------------------------------------------
-Evaluation Metrics on clean Cora:
-    Accuracy:   0.8050
-    Precision:  0.7854
-    Recall:     0.8173
-    F1 Score:   0.7980
+Evaluation Metrics on clean Citeseer:
+    Accuracy:   0.6720
+    Precision:  0.6615
+    Recall:     0.6574
+    F1 Score:   0.6518
 
-Evaluation Metrics on poisoned Cora:
-    Accuracy:   0.7090
-    Precision:  0.6912
-    Recall:     0.7073
-    F1 Score:   0.6862
+---- Run 1 ----
+Evaluation Metrics on poisoned Citeseer:
+    Accuracy:   0.6290
+    Precision:  0.6081
+    Recall:     0.6095
+    F1 Score:   0.6014
 
-Metric Comparison: Cora:
-    Accuracy Drop:        0.0960
-    Attack Success Rate:  0.1193
+Metric Comparison: Citeseer:
+    Accuracy Drop:        0.0430
+    Attack Success Rate:  0.0640
+
+---- Run 2 ----
+Evaluation Metrics on poisoned Citeseer:
+    Accuracy:   0.6270
+    Precision:  0.6036
+    Recall:     0.6075
+    F1 Score:   0.5987
+
+Metric Comparison: Citeseer:
+    Accuracy Drop:        0.0450
+    Attack Success Rate:  0.0670
+
+---- Run 3 ----
+Evaluation Metrics on poisoned Citeseer:
+    Accuracy:   0.5470
+    Precision:  0.5302
+    Recall:     0.5405
+    F1 Score:   0.5255
+
+Metric Comparison: Citeseer:
+    Accuracy Drop:        0.1250
+    Attack Success Rate:  0.1860
+
+---- Poisoned Overall ----
+Average and Std for Citeseer:
+    Accuracy:   0.6010 ± 0.0382
+    Precision:  0.5807 ± 0.0357
+    Recall:     0.5858 ± 0.0321
+    F1 Score:   0.5752 ± 0.0352
+
+****************************************************************************************************
+Running Metattack with 1522 perturbations
+
+----------------------------------------------------------------------------------------------------
+Evaluation Metrics on clean PolBlogs:
+    Accuracy:   0.8658
+    Precision:  0.8816
+    Recall:     0.8651
+    F1 Score:   0.8642
+
+---- Run 1 ----
+Evaluation Metrics on poisoned PolBlogs:
+    Accuracy:   0.7953
+    Precision:  0.8218
+    Recall:     0.7963
+    F1 Score:   0.7914
+
+Metric Comparison: PolBlogs:
+    Accuracy Drop:        0.0705
+    Attack Success Rate:  0.0814
+
+---- Run 2 ----
+Evaluation Metrics on poisoned PolBlogs:
+    Accuracy:   0.7886
+    Precision:  0.8265
+    Recall:     0.7897
+    F1 Score:   0.7827
+
+Metric Comparison: PolBlogs:
+    Accuracy Drop:        0.0772
+    Attack Success Rate:  0.0891
+
+---- Run 3 ----
+Evaluation Metrics on poisoned PolBlogs:
+    Accuracy:   0.8054
+    Precision:  0.8288
+    Recall:     0.8063
+    F1 Score:   0.8022
+
+Metric Comparison: PolBlogs:
+    Accuracy Drop:        0.0604
+    Attack Success Rate:  0.0698
+
+---- Poisoned Overall ----
+Average and Std for PolBlogs:
+    Accuracy:   0.7964 ± 0.0069
+    Precision:  0.8257 ± 0.0029
+    Recall:     0.7974 ± 0.0068
+    F1 Score:   0.7921 ± 0.0080
+
+****************************************************************************************************
+Running Metattack with 1366 perturbations
+
+----------------------------------------------------------------------------------------------------
+Evaluation Metrics on clean PubMed:
+    Accuracy:   0.8746
+    Precision:  0.8762
+    Recall:     0.8565
+    F1 Score:   0.8631
+
+---- Run 1 ----
+Evaluation Metrics on poisoned PubMed:
+    Accuracy:   0.7384
+    Precision:  0.7754
+    Recall:     0.6023
+    F1 Score:   0.5990
+
+Metric Comparison: PubMed:
+    Accuracy Drop:        0.1362
+    Attack Success Rate:  0.1558
+
+---- Run 2 ----
+Evaluation Metrics on poisoned PubMed:
+    Accuracy:   0.7833
+    Precision:  0.8071
+    Recall:     0.6940
+    F1 Score:   0.7212
+
+Metric Comparison: PubMed:
+    Accuracy Drop:        0.0913
+    Attack Success Rate:  0.1044
+
+---- Run 3 ----
+Evaluation Metrics on poisoned PubMed:
+    Accuracy:   0.7167
+    Precision:  0.5033
+    Recall:     0.5586
+    F1 Score:   0.5206
+
+Metric Comparison: PubMed:
+    Accuracy Drop:        0.1579
+    Attack Success Rate:  0.1805
+
+---- Poisoned Overall ----
+Average and Std for PubMed:
+    Accuracy:   0.7461 ± 0.0277
+    Precision:  0.6953 ± 0.1364
+    Recall:     0.6183 ± 0.0564
+    F1 Score:   0.6136 ± 0.0825
 

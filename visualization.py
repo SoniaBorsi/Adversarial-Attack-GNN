@@ -2,6 +2,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import torch
 import os
+import seaborn as sns
 
 from torch_geometric.data import Data
 
@@ -45,3 +46,32 @@ def visualize_graph(edge_index, title="Graph", save_dir="visuals"):
     plt.savefig(save_path) # Save the figure
     plt.close()  # Close the plot to free memory
     print(f"    Graph saved to {save_path}\n")
+
+
+def plot_accuracy_boxplot(clean_acc, poisoned_acc_list, ptb_percent, dataset_name, num_perturbations):
+    """
+    Display one clean accuracy and multiple poisoned accuracies using seaborn.
+    Clean shown as a point; poisoned as a boxplot.
+    """
+
+    # Prepare data
+    y = poisoned_acc_list + [clean_acc]
+    x = ["Acc. Perturbed"] * len(poisoned_acc_list) + ["Acc. Clean"]
+
+    # Plot
+    plt.figure(figsize=(6, 6))
+    sns.boxplot(x=x, y=y, hue=x, palette={"Acc. Clean": "blue", "Acc. Perturbed": "orange"}, showfliers=False)
+    sns.stripplot(x=["Acc. Clean"], y=[clean_acc], color="blue", size=8, jitter=False, marker='D')
+
+    plt.title(f"Accuracy before/after perturbed {ptb_percent}% edges")
+    plt.ylabel("Accuracy")
+    plt.xlabel("")
+    plt.tight_layout()
+
+    save_dir = "acc_boxplots"
+    os.makedirs(save_dir, exist_ok=True)
+    save_path = os.path.join(save_dir, f"{dataset_name}_acc_boxplot{num_perturbations}.png")
+    plt.savefig(save_path, dpi=600)
+    plt.show()
+    plt.close()
+    print(f"    Accuracy boxplot saved to {save_path}\n")

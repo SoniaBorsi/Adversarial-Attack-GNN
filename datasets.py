@@ -164,7 +164,7 @@ def extract_subgraph(data, num_hops, min_num_nodes, num_center_nodes, max_attemp
 
     return subgraph
 
-def perturbed_dataset(perturbed_adj, perturbed_features, data, dataset_name, num_perturbations):
+def perturbed_dataset(perturbed_adj, perturbed_features, data, dataset_name, num_perturbations, run):
     """
     Save the perturbed dataset.
     Args:
@@ -175,7 +175,7 @@ def perturbed_dataset(perturbed_adj, perturbed_features, data, dataset_name, num
     """
     # Save the perturbed dataset
     os.makedirs("perturbed_data", exist_ok=True)  # create a folder if it doesn't exist
-    save_path = os.path.join("perturbed_data", f"{dataset_name}_perturbed{num_perturbations}.pt")
+    save_path = os.path.join("perturbed_data", f"{dataset_name}_perturbed{num_perturbations}_run{run+1}.pt")
 
     # Save perturbed adj and features together
     torch.save({

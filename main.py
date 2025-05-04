@@ -6,8 +6,8 @@ import constants
 from datasets import load_dataset, split_masks, patch_data, perturbed_dataset
 from model import GCN, train_model
 from metattack import apply_metattack
-from evaluation import evaluate_model, before_attack, after_attack, compare_results
-from visualization import visualize_graph
+from evaluation import evaluate_model, before_attack, after_attack, compare_results, avg_std
+from visualization import visualize_graph, plot_accuracy_boxplot
 
 def run_experiment(dataset_name, first_run):
     """
@@ -23,7 +23,8 @@ def run_experiment(dataset_name, first_run):
     data = patch_data(dataset, dataset_name)
     poisoned_data = data.clone()
     num_classes = len(torch.unique(data.y))
-    num_perturbations = int(data.num_nodes * 0.3)
+    pert_rate = 0.08
+    num_perturbations = int(data.edge_index.size(1) * pert_rate)#int(data.num_nodes * 0.3)
 
     print(f"Number of perturbations: {num_perturbations}")
 
@@ -66,68 +67,82 @@ def run_experiment(dataset_name, first_run):
             save_dir="visuals"
         )
 
+    # Save results ---------------------------------------------------------
+    acc_poisoned_list = []
+    prec_poisoned_list = []
+    rec_poisoned_list = []
+    f1_poisoned_list = []
+
     # Apply Metattack ------------------------------------------------------
-    poisoned_model = GCN(poisoned_data.num_features, 16, num_classes)
-    poisoned_model_path = os.path.join("poisoned_models", f"{dataset_name}_poisoned{num_perturbations}.pt")
-    os.makedirs("poisoned_models", exist_ok=True)
+    for run in range(3):
+        print(f"---- Run {run + 1} ---\n")
 
-    poisoned_perturbed_adj, poisoned_perturbed_features = apply_metattack(
-        poisoned_model, 
-        poisoned_data, 
-        num_perturbations=num_perturbations
-    )
-
-    original_adj = torch.zeros((data.num_nodes, data.num_nodes), dtype=torch.int32)
-    original_adj[data.edge_index[0], data.edge_index[1]] = 1
-    poisoned_adj = poisoned_perturbed_adj.to(torch.int32)
-
-    diff = (original_adj != poisoned_adj).sum().item()
-    print(f"\n[DEBUG] Number of changed entries in adjacency matrix: {diff}")
-    expected = num_perturbations * 2
-    if diff < expected:
-        print(f"[WARNING] Fewer than expected edge changes! Got {diff}, expected at least ~{expected}")
+        with open(constants.RES_PATH, "a") as f:
+            f.write(f"---- Run {run + 1} ----\n")
     
-    edge_index_perturbed = poisoned_perturbed_adj.nonzero().t()
-    
-    # Save the perturbed dataset
-    perturbed_dataset(poisoned_perturbed_adj, poisoned_perturbed_features, data, dataset_name, num_perturbations)
-    
-    # Train and evaluate on poisoned dataset, save graph --------------------------------------------------------------
-    poisoned_data.edge_index = edge_index_perturbed
-    poisoned_data.x = poisoned_perturbed_features
+        attack_model = GCN(poisoned_data.num_features, 16, num_classes)
+        poisoned_perturbed_adj, poisoned_perturbed_features = apply_metattack(
+            attack_model, 
+            poisoned_data, 
+            num_perturbations=num_perturbations
+        )
 
-    if os.path.exists(poisoned_model_path):
-        print(f"Poisoned model already exists at {poisoned_model_path}. Loading the model.")
-        poisoned_model.load_state_dict(torch.load(poisoned_model_path, weights_only=True))
-    else:
-        print(f"Training and saving poisoned model to {poisoned_model_path}")
+        original_adj = torch.zeros((data.num_nodes, data.num_nodes), dtype=torch.int32)
+        original_adj[data.edge_index[0], data.edge_index[1]] = 1
+        poisoned_adj = poisoned_perturbed_adj.to(torch.int32)
+
+        edge_index_perturbed = poisoned_perturbed_adj.nonzero().t()
+    
+        # Train and evaluate on poisoned dataset, save graph --------------------------------------------------------------
+        poisoned_data.edge_index = edge_index_perturbed
+        poisoned_data.x = poisoned_perturbed_features
+        poisoned_model = GCN(poisoned_data.num_features, 16, num_classes)
         poisoned_model = train_model(poisoned_model, poisoned_data)
+
+        # Save model and dataset
+        poisoned_model_path = os.path.join("poisoned_models", f"{dataset_name}_poisoned{num_perturbations}_run{run+1}.pt")
+        os.makedirs("poisoned_models", exist_ok=True)
         torch.save(poisoned_model.state_dict(), poisoned_model_path)
+        perturbed_dataset(poisoned_perturbed_adj, poisoned_perturbed_features, data, dataset_name, num_perturbations, run)
 
-    poisoned_model.eval()
-    acc_poisoned, prec_poisoned, rec_poisoned, f1_poisoned = after_attack(
-        poisoned_model, poisoned_data, dataset_name,
-        poisoned_perturbed_adj, poisoned_perturbed_features
-    )
+        poisoned_model.eval()
+        acc_poisoned, prec_poisoned, rec_poisoned, f1_poisoned = after_attack(
+            poisoned_model, poisoned_data, dataset_name,
+            poisoned_perturbed_adj, poisoned_perturbed_features
+        )
 
-    if data.num_nodes <= 5000:
-        print("-" * 100)
-        print("Perturbed Graph:")
-        visualize_graph(
-            edge_index_perturbed,
-            title=f"{dataset_name}_poisoned_pert{num_perturbations}",
-            save_dir="visuals"
+        # Store the results for the current run
+        acc_poisoned_list.append(acc_poisoned)
+        prec_poisoned_list.append(prec_poisoned)
+        rec_poisoned_list.append(rec_poisoned)
+        f1_poisoned_list.append(f1_poisoned)        
+
+        if data.num_nodes <= 5000:
+            print("-" * 100)
+            print("Perturbed Graph:")
+            visualize_graph(
+                edge_index_perturbed,
+                title=f"{dataset_name}_poisoned_pert{num_perturbations}_run{run+1}",
+                save_dir="visuals"
+            )
+        
+        # Compare metrics --------------------------------------------------------------
+        compare_results(
+            dataset_name,
+            acc_clean, prec_clean, rec_clean, f1_clean,
+            acc_poisoned, prec_poisoned, rec_poisoned, f1_poisoned
         )
     
-    # Compare metrics --------------------------------------------------------------
-    compare_results(
-        dataset_name,
-        acc_clean, prec_clean, rec_clean, f1_clean,
-        acc_poisoned, prec_poisoned, rec_poisoned, f1_poisoned
-    )
-    
+    with open(constants.RES_PATH, "a") as f:
+        f.write(f"---- Poisoned Overall ----\n")
+    # Save the average results for the dataset
+    avg_std(acc_poisoned_list, prec_poisoned_list, rec_poisoned_list, f1_poisoned_list, dataset_name)
 
-if __name__ == "__main__": 
+    # plot accuracy
+    plot_accuracy_boxplot(acc_clean, acc_poisoned_list, int(pert_rate * 100), dataset_name, num_perturbations)
+
+    
+def main():
     """
     Run the experiment for all datasets.
     Uncomment the datasets you want to run.
@@ -145,12 +160,12 @@ if __name__ == "__main__":
     #datasets = [constants.PUBMED, constants.FLICKR, constants.OGBN_PROTEINS]
 
     # For debugging purposes, uncomment the dataset you want to run
-    datasets = [constants.CORA]
+    #datasets = [constants.CORA]
     #datasets = [constants.CITESEER]
     #datasets = [constants.POLBLOGS]
     #datasets = [constants.TEXAS]
     #datasets = [constants.FLICKR]
-    #datasets = [constants.PUBMED]
+    datasets = [constants.PUBMED]
     #datasets = [constants.OGBN_PROTEINS]
 
     first_run = True
@@ -158,3 +173,8 @@ if __name__ == "__main__":
     for dataset_name in datasets:
         run_experiment(dataset_name, first_run)
         first_run = False
+
+
+
+if __name__ == "__main__": 
+    main()

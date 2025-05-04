@@ -1,6 +1,7 @@
 import torch
 import os
 import constants
+import numpy as np
 
 from torch_geometric.utils import to_torch_coo_tensor
 from sklearn.metrics import f1_score, precision_score, recall_score
@@ -115,3 +116,25 @@ def compare_results(dataset_name, acc_clean, prec_clean, rec_clean, f1_clean,
 
     print(f"    Compared evaluation metrics to {constants.RES_PATH}\n")
 
+
+def avg_std(acc_poisoned_list, prec_poisoned_list, rec_poisoned_list, f1_poisoned_list, dataset_name):
+    acc_poisoned_avg = np.mean(acc_poisoned_list)
+    acc_poisoned_std = np.std(acc_poisoned_list)
+
+    prec_poisoned_avg = np.mean(prec_poisoned_list)
+    prec_poisoned_std = np.std(prec_poisoned_list)
+
+    rec_poisoned_avg = np.mean(rec_poisoned_list)
+    rec_poisoned_std = np.std(rec_poisoned_list)
+
+    f1_poisoned_avg = np.mean(f1_poisoned_list)
+    f1_poisoned_std = np.std(f1_poisoned_list)
+
+    with open(constants.RES_PATH, "a") as f:  
+        f.write(f"Average and Std for {dataset_name}:\n")
+        f.write(f"    Accuracy:   {acc_poisoned_avg:.4f} ± {acc_poisoned_std:.4f}\n")
+        f.write(f"    Precision:  {prec_poisoned_avg:.4f} ± {prec_poisoned_std:.4f}\n")
+        f.write(f"    Recall:     {rec_poisoned_avg:.4f} ± {rec_poisoned_std:.4f}\n")
+        f.write(f"    F1 Score:   {f1_poisoned_avg:.4f} ± {f1_poisoned_std:.4f}\n\n")  
+
+    print(f"    Saved average and std to {constants.RES_PATH}\n")
