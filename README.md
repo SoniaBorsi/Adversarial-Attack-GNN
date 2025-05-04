@@ -48,7 +48,7 @@ Machine Learning Project
 
 ## Run the Script
 
-First uncomment the dataset you want:
+First uncomment the dataset(s) you want (Our code runs on Cora, Citeseer, PolBlogs, and PubMed (subgraph)):
 
 ```python
 if __name__ == "__main__": 
@@ -62,7 +62,7 @@ python main.py
 
 # What you should see
 
-You should have generated a couple of new folders (right now with Cora and Citeseer datasets on CPU | PolBlogs and Texas maybe later). 
+You should have generated a couple of new folders. 
 
 folders:
 
@@ -72,7 +72,8 @@ folders:
 4. **perturbed_data** - contains the poisoned dataset.
 5. **poisoned_models** - contains poisoned models on the poisoned dataset.
 6. **visuals** - containing the dataset visuals before and after the attack.
-7. "results" - containing a `.txt` file outputting the evaluation metrics before and after metattack.
+7. **acc_boxplots** - containing the accuracies of the three runs compared to the clean model's accuracy.
+8. **results** - containing a `.txt` file outputting the evaluation metrics before and after metattack.
 
 ## Specifications
 
