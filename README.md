@@ -8,9 +8,8 @@ This repository contains a novel structural attack on Graph Neural Networks (GNN
 <br>
 
 <p align="center">
-  <img src="[https://github.com/andreleo02/deep-dream-team/blob/438b36ca8076da82890a56df2ff4e28dcfca60e4/Fine-grained-classification-vs-general-image-classification-Finegrained-classification.png.jpeg](https://github.com/SoniaBorsi/Adversarial-Attack-GNN/blob/7862e822eacc79c445e19cdd84321c050307ade9/data/network.png)?raw=true" width="512"/>  
+  <img src="https://github.com/SoniaBorsi/Adversarial-Attack-GNN/blob/37bc998e847ea508fc68e2a3d886b4462175e5c6/data/network.png?raw=true" width="512"/>  
 </p>
-
 <p align="center">
   <sub><em>Cora citation network before and after the adversarial attack. </em></sub>
 </p>
