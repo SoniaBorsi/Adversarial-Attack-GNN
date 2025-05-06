@@ -1,0 +1,100 @@
+****************************************************************************************************
+Running Nettack with 728 perturbations
+
+----------------------------------------------------------------------------------------------------
+Evaluation Metrics on clean Citeseer:
+    Accuracy:   0.6720
+    Precision:  0.6615
+    Recall:     0.6574
+    F1 Score:   0.6518
+
+---- Run 1 ----
+Evaluation Metrics on poisoned Citeseer:
+    Accuracy:   0.6780
+    Precision:  0.6640
+    Recall:     0.6553
+    F1 Score:   0.6542
+
+Metric Comparison: Citeseer:
+    Accuracy Drop:        -0.0060
+    Attack Success Rate:  -0.0089
+
+---- Run 2 ----
+Evaluation Metrics on poisoned Citeseer:
+    Accuracy:   0.6840
+    Precision:  0.6588
+    Recall:     0.6544
+    F1 Score:   0.6523
+
+Metric Comparison: Citeseer:
+    Accuracy Drop:        -0.0120
+    Attack Success Rate:  -0.0179
+
+---- Run 3 ----
+Evaluation Metrics on poisoned Citeseer:
+    Accuracy:   0.6750
+    Precision:  0.6605
+    Recall:     0.6541
+    F1 Score:   0.6502
+
+Metric Comparison: Citeseer:
+    Accuracy Drop:        -0.0030
+    Attack Success Rate:  -0.0045
+
+---- Poisoned Overall ----
+Average and Std for Citeseer:
+    Accuracy:   0.6790 � 0.0037
+    Precision:  0.6611 � 0.0022
+    Recall:     0.6546 � 0.0005
+    F1 Score:   0.6522 � 0.0016
+
+****************************************************************************************************
+Running Nettack with 844 perturbations
+
+----------------------------------------------------------------------------------------------------
+Evaluation Metrics on clean Cora:
+    Accuracy:   0.7890
+    Precision:  0.7646
+    Recall:     0.8126
+    F1 Score:   0.7820
+
+---- Run 1 ----
+Evaluation Metrics on poisoned Cora:
+    Accuracy:   0.8040
+    Precision:  0.7833
+    Recall:     0.8138
+    F1 Score:   0.7945
+
+Metric Comparison: Cora:
+    Accuracy Drop:        -0.0150
+    Attack Success Rate:  -0.0190
+
+---- Run 2 ----
+Evaluation Metrics on poisoned Cora:
+    Accuracy:   0.7970
+    Precision:  0.7747
+    Recall:     0.8173
+    F1 Score:   0.7907
+
+Metric Comparison: Cora:
+    Accuracy Drop:        -0.0080
+    Attack Success Rate:  -0.0101
+
+---- Run 3 ----
+Evaluation Metrics on poisoned Cora:
+    Accuracy:   0.8020
+    Precision:  0.7779
+    Recall:     0.8178
+    F1 Score:   0.7931
+
+Metric Comparison: Cora:
+    Accuracy Drop:        -0.0130
+    Attack Success Rate:  -0.0165
+
+---- Poisoned Overall ----
+Average and Std for Cora:
+    Accuracy:   0.8010 � 0.0029
+    Precision:  0.7786 � 0.0036
+    Recall:     0.8163 � 0.0018
+    F1 Score:   0.7928 � 0.0016
+
