@@ -5,6 +5,17 @@ This repository contains a novel structural attack on Graph Neural Networks (GNN
 > **Note:** This `main` branch contains **only our novel attack**. For the implementation of **Metattack**, switch to the [`mettack`](https://github.com/SoniaBorsi/Adversarial-Attack-GNN/tree/mettack) branch, which includes a dedicated README and setup instructions.
 
 
+<br>
+
+<p align="center">
+  <img src="[https://github.com/andreleo02/deep-dream-team/blob/438b36ca8076da82890a56df2ff4e28dcfca60e4/Fine-grained-classification-vs-general-image-classification-Finegrained-classification.png.jpeg](https://github.com/SoniaBorsi/Adversarial-Attack-GNN/blob/7862e822eacc79c445e19cdd84321c050307ade9/data/network.png)?raw=true" width="512"/>  
+</p>
+
+<p align="center">
+  <sub><em>Cora citation network before and after the adversarial attack. </em></sub>
+</p>
+
+
 ### Table of contents:
 - [Project Structure](#Project-Structure)
 - [Novel Attack](#Novel-Attack)
