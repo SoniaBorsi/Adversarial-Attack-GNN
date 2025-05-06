@@ -55,7 +55,7 @@ This repository contains a novel structural attack on Graph Neural Networks (GNN
 
    ```
 
-Install dependencies:
+2. Install dependencies:
 
 ```
  pip install -r requirements.txt
@@ -64,7 +64,7 @@ Install dependencies:
 ---
 ## How to Run
 
-To execute the attack, use the following command:
+3. To execute the attack, use the following command:
 
 ```
 python3 -m src.attack \
