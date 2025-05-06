@@ -74,7 +74,7 @@ Our custom attack operates in the following stages:
 3. **Surrogate Loss Scoring**: A one-layer GCN evaluates whether a swap increases classification loss.
 4. **Feature Noise**: Adds minor binary feature perturbations for enhanced misclassification.
 
-### Attack Constraints
+### Constraints:
 
 - Preserves graph degree sequence, connectivity, and total edge count.
 - Only targets structurally important nodes for maximum impact.
@@ -103,12 +103,11 @@ Other optional flags:
 
 ---
 
-## Data:
+## Data
 
 * **Cora** : 2,708 scientific papers, 5,429 citation edges, 7 classes.
 * **Citeseer** : 3,312 papers, 4,732 citations, 6 classes.
-
-These are automatically downloaded and cached using** **`torch_geometric`.
+These are automatically downloaded and cached using [`torch_geometric`](https://pytorch-geometric.readthedocs.io/en/latest/modules/datasets.html).
 ---
 
 ## 📂 Other Branches
