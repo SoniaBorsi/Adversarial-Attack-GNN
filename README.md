@@ -47,7 +47,7 @@ This repository contains a novel structural attack on Graph Neural Networks (GNN
 
 ## Installation
 
-1. Clone the repository:
+Clone the repository:
 
    ```
    git clone https://github.com/SoniaBorsi/Adversarial-Attack-GNN.git
@@ -55,7 +55,7 @@ This repository contains a novel structural attack on Graph Neural Networks (GNN
 
    ```
 
-2. Install dependencies:
+Install dependencies:
 
 ```
  pip install -r requirements.txt
@@ -63,8 +63,7 @@ This repository contains a novel structural attack on Graph Neural Networks (GNN
 ```
 ---
 ## How to Run
-
-3. To execute the attack, use the following command:
+To execute the attack, use the following command:
 
 ```
 python3 -m src.attack \
