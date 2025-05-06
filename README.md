@@ -4,6 +4,15 @@ This repository contains a novel structural attack on Graph Neural Networks (GNN
 
 > **Note:** This `main` branch contains **only our novel attack**. For the implementation of **Metattack**, switch to the [`mettack`](https://github.com/SoniaBorsi/Adversarial-Attack-GNN/tree/mettack) branch, which includes a dedicated README and setup instructions.
 
+
+### Table of contents:
+- [Project Structure](#Project-Structure)
+- [Novel Attack](#Novel-Attack)
+- [Installation](#Installation)
+- [How to Run](#How-to-Run)
+- [Data](Data)
+- [Authors](Authors)
+
 ---
 
 ## Project Structure
@@ -24,7 +33,36 @@ This repository contains a novel structural attack on Graph Neural Networks (GNN
 ```
 
 ```
+---
 
+## Installation
+
+1. Clone the repository:
+
+   ```
+   git clone https://github.com/SoniaBorsi/Adversarial-Attack-GNN.git
+   cd Adversarial-Attack-GNN
+
+   ```
+
+Install dependencies:
+
+```
+ pip install -r requirements.txt
+
+```
+---
+## How to Run
+
+To execute the attack, use the following command:
+
+```
+python3 -m src.attack \
+  --dataset cora \
+  --budget 2000 \
+  --p_surrogate 0.2
+
+```
 ---
 
 ## Novel Attack
@@ -43,18 +81,6 @@ Our custom attack operates in the following stages:
 
 ---
 
-## How to Run
-
-To execute the attack, use the following command:
-
-```
-python3 -m src.attack \
-  --dataset cora \
-  --budget 2000 \
-  --p_surrogate 0.2
-
-```
-
 ### Parameters
 
 * `--dataset`: Choose between** **`cora` or** **`citeseer`.
@@ -68,29 +94,14 @@ Other optional flags:
 
 ---
 
-## Evaluation Metrics
+### Evaluation Metrics
 
 * **F1 Score**
 * **Attack Success Rate (ASR)**
 * **Classification Accuracy Drop (CAD)**
 * **Computational Efficiency**
 
-## Installation
-
-1. Clone the repository:
-
-   ```
-   git clone https://github.com/SoniaBorsi/Adversarial-Attack-GNN.git
-   cd Adversarial-Attack-GNN
-
-   ```
-
-Install dependencies:
-
-```
- pip install -r requirements.txt
-
-```
+---
 
 ## Data:
 
@@ -98,14 +109,16 @@ Install dependencies:
 * **Citeseer** : 3,312 papers, 4,732 citations, 6 classes.
 
 These are automatically downloaded and cached using** **`torch_geometric`.
+---
 
 ## 📂 Other Branches
 
 * [`mettack`](https://github.com/SoniaBorsi/Adversarial-Attack-GNN/tree/mettack): Implements Metattack strategy. Refer to its own README for setup and usage.
+---
 
 ## Authors
 
-* Zoe Kenick (Virginia Tech)
-* Jiyoon Paik (Virginia Tech)
-* Samuel Scalzo (Virginia Tech)
-* Sonia Borsi (University of Trento)
+* [Zoe Kenick](https://github.com/zkenick) (Virginia Tech)
+* [Jiyoon Paik](https://github.com/jiyoonpaik) (Virginia Tech)
+* [Samuel Scalzo](https://github.com/srscalzo1) (Virginia Tech)
+* [Sonia Borsi](https://github.com/SoniaBorsi) (University of Trento)
