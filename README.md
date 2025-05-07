@@ -39,10 +39,6 @@ This repository contains a novel structural attack on Graph Neural Networks (GNN
 └── utils.py # Helper utilities
 
 ```
-
-```
-
-```
 ---
 
 ## Installation
