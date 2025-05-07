@@ -111,8 +111,7 @@ Other optional flags:
 ## Data
 
 * **Cora** : 2,708 scientific papers, 5,429 citation edges, 7 classes.
-* **Citeseer** : 3,312 papers, 4,732 citations, 6 classes.
-These are automatically downloaded and cached using [`torch_geometric`](https://pytorch-geometric.readthedocs.io/en/latest/modules/datasets.html).
+Automatically downloaded and cached using [`torch_geometric`](https://pytorch-geometric.readthedocs.io/en/latest/modules/datasets.html).
 ---
 
 ## 📂 Other Branches
