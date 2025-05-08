@@ -68,6 +68,7 @@ python3 -m src.attack \
   --p_surrogate 0.2
 
 ```
+> **Note:** These `configs` can be changed to conduct experiments.
 ---
 
 ## Novel Attack
