@@ -20,8 +20,8 @@ This repository contains a novel structural attack on Graph Neural Networks (GNN
 - [Novel Attack](#Novel-Attack)
 - [Installation](#Installation)
 - [How to Run](#How-to-Run)
-- [Data](Data)
-- [Authors](Authors)
+- [Data](#Data)
+- [Authors](#Authors)
 
 ---
 
