@@ -1,3 +1,4 @@
+
 # Adversarial-Attack-GNN-nettack
 
 This repository provides an implementation of a targeted adversarial attack on Graph Neural Networks (GNNs) using **Nettack**. Nettack perturbs the local neighborhood of a chosen node to degrade the model's classification performance on that node.
@@ -63,50 +64,41 @@ This will:
 1. Load and preprocess the dataset.
 2. Train a clean GCN and save its weights under `clean_models/`.
 3. Evaluate and log clean performance.
+4. Visualize the original graph (if ≤ 5 000 nodes) in `visuals/` as `<dataset>_clean.png`.
 
-### 2. Run Nettack (Targeted Attack)
+### 2. Run Globalized Nettack (8% budget)
 
-1. **Ensure** `nettack.py` is present in the repository root.
-2. **Import** in `main.py`:
+The code now:
 
-   ```python
-   from nettack import apply_nettack
-   ```
-3. **Configure** the attack inside the `run_experiment` loop in `main.py`:
+1. Samples **8 % of the test nodes** as targets (minimum 1).
+2. Splits the total budget (8 % of all edges) evenly across these targets.
+3. Sequentially applies Nettack (structure + feature flips) to each target on the **same** graph, accumulating perturbations.
+4. Dumps each per‐target perturbed graph and features to `perturbed_data/` as `<dataset>_perturbed<budget>_<target>.pt`.
+5. Retrains and evaluates one final poisoned GCN on the fully perturbed graph:
 
-   ```python
-   # Instantiate and train the surrogate model
-   attack_model = train_model(GCN(data.num_features, 16, num_classes), data)
-   attack_model.eval()
+   * Saves the final poisoned model checkpoint to `poisoned_models/<dataset>_poisoned<budget>_final.pt`.
+   * Logs **global metrics** (ΔACC, Precision, Recall, F1) to `results/eval_results.txt` using the existing `compare_results` / `avg_std`.
+   * Visualizes the final poisoned graph (if ≤ 5 000 nodes) in `visuals/` as `<dataset>_poisoned_final.png`.
+6. Computes **targeted metrics** for Nettack:
 
-   # Select a target node (e.g., the first test node)
-   test_nodes = data.test_mask.nonzero(as_tuple=False).view(-1)
-   target = int(test_nodes[0])
+   * **Targeted Success Rate**: fraction of attacked test nodes whose predicted label flipped.
+   * **Average Confidence Drop**: average drop in the model’s probability on the true class for each target.
+     These are appended to `results/eval_results.txt` at the end of each experiment run.
 
-   # Apply Nettack to the target node
-   poisoned_data = apply_nettack(
-       model=attack_model,
-       data=data,
-       target_node=target,
-       n_perturbations=num_perturbations,
-       attack_structure=True,
-       attack_features=False
-   )
-   ```
-4. **Run**:
+To execute:
 
-   ```bash
-   python main.py
-   ```
+```bash
+python main.py
+```
 
-Outputs (models, metrics, and visualizations) will be saved in:
+After completion, inspect:
 
-* `poisoned_models/`
-* `results/eval_results.txt`
-* `visuals/` (graph images)
-* `acc_boxplots/`
-
----
+* `clean_models/` for the clean GCN weights.
+* `perturbed_data/` for per‐target perturbed graph dumps.
+* `poisoned_models/` for the final poisoned GCN checkpoint.
+* `visuals/` for original and final graph images.
+* `acc_boxplots/` for global ΔACC plots.
+* `results/eval_results.txt` for both global and targeted metrics.
 
 ## Repository Structure
 
